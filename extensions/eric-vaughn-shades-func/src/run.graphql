@@ -1,0 +1,26 @@
+query RunInput {
+  cart {
+    lines {
+      id
+      quantity
+      cost {
+        totalAmount {
+          amount
+        }
+      }
+      gwp: attribute(key: "_gwp") {
+        value
+      }
+      merchandise {
+        ... on ProductVariant {
+          id
+          product {
+            id
+            title
+          }
+          __typename
+        }        
+      }
+    }
+  }
+}
