@@ -3,7 +3,7 @@
 client_id = "98659bd10a7ece390562269fdcabe4a9"
 name = "discount-iq"
 handle = "discount-iq-1"
-application_url = "https://evolution-respect-chances-consolidated.trycloudflare.com"
+application_url = "https://pj-fu-wrapped-florida.trycloudflare.com"
 embedded = true
 
 [build]
@@ -17,9 +17,9 @@ scopes = "read_discounts,write_cart_transforms,write_discounts,write_products"
 
 [auth]
 redirect_urls = [
-  "https://evolution-respect-chances-consolidated.trycloudflare.com/auth/callback",
-  "https://evolution-respect-chances-consolidated.trycloudflare.com/auth/shopify/callback",
-  "https://evolution-respect-chances-consolidated.trycloudflare.com/api/auth/callback"
+  "https://pj-fu-wrapped-florida.trycloudflare.com/auth/callback",
+  "https://pj-fu-wrapped-florida.trycloudflare.com/auth/shopify/callback",
+  "https://pj-fu-wrapped-florida.trycloudflare.com/api/auth/callback"
 ]
 
 [webhooks]
