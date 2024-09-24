@@ -1,115 +1,141 @@
-
 <script>
-  console.log("CART BFCM starts")
-  /**
-  get the line items 
-  */
-  function getCart_2(){
-    $.ajax({
-      method: "GET",
-      url: "/cart.js",
-      dataType: "json",
-      success: function(cart) {
-      // Determining if threshold has been met
-      let promo_variant_id = 43117300842530
-      let existing_promo_product = false
-      let gwp_key = null
-      let line_items = cart.items;
-      let all_products = []
-      let flex_weft_tape_count = 0
-      let ktip_count = 0
-        for(i = 0; i < line_items.length; i++) {
-          if(line_items[i].variant_id == promo_variant_id && line_items[i].properties?.hasOwnProperty("GWP")) {
-            existing_promo_product = true
-            gwp_key = line_items[i].key
-          }
-          $.ajax({
-            url: `/products/${line_items[i].handle}.json`,
-            type: "GET",
-            async: false,
-            cache: false,
-            success: (product) => {
-              let line_item_data = {
-                quantity: line_items[i].quantity,
-                ...product
+  (function() {
+    console.log("BFCM starts")
+    function getTheCart(){
+      fetch('/cart.js', {
+        method: 'GET',
+        credentials: 'same-origin',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+      })
+      .then(response => response.json())
+      .then(function(data) {
+          if (data.status === 422) {
+              console.log('Error', data);
+          } else {
+            // Determining if threshold has been met
+            let cart = data
+            let promo_variant_id = 43117300842530
+            let existing_promo_product = false
+            let gwp_key = null
+            let line_items = cart.items;
+            let all_products = []
+            let flex_weft_tape_count = 0
+            let ktip_count = 0
+            for(i = 0; i < line_items.length; i++) {
+              if(line_items[i].variant_id == promo_variant_id && line_items[i].properties?.hasOwnProperty("_gwp")) {
+                existing_promo_product = true
+                gwp_key = line_items[i].key
               }
-              all_products.push(line_item_data)
-            },
-          });
-        }
-        for(i = 0; i < all_products.length; i++){
-          let product_title = all_products[i].product.title.toLowerCase()
-          if(product_title.includes('eric vaughn')){
-            //Flex Weft Hair Extensions
-            if(all_products[i].product.tags.includes('Type_Professional_Fex Weft')){
-              flex_weft_tape_count += all_products[i].quantity 
+              $.ajax({
+                url: `/products/${line_items[i].handle}.json`,
+                type: "GET",
+                async: false,
+                cache: false,
+                success: (product) => {
+                  let line_item_data = {
+                    quantity: line_items[i].quantity,
+                    ...product
+                  }
+                  all_products.push(line_item_data)
+                },
+              });
             }
-            // Tape In Hair Extension
-            if(all_products[i].product.product_type == 'PRO Tape Hair 20" 50g' ){
-              flex_weft_tape_count += all_products[i].quantity
+            for(i = 0; i < all_products.length; i++){
+              let product_title = all_products[i].product.title.toLowerCase()
+              //console.log(product_title)
+              if(product_title.includes('eric vaughn')){
+                //Flex Weft Hair Extensions
+                if(all_products[i].product.tags.includes('Type_Professional_Fex Weft')){
+                  flex_weft_tape_count += all_products[i].quantity 
+                }
+                // Tape In Hair Extension
+                if(all_products[i].product.product_type == 'PRO Tape Hair 20" 50g' ){
+                  flex_weft_tape_count += all_products[i].quantity
+                }
+                // K tip hair extensions 
+                //console.log('all_products[i].product.type',all_products[i].product)
+                if(all_products[i].product.product_type == 'PRO Keratin Tip 16" 25g' || all_products[i].product.product_type == 'PRO Keratin Tip 20" 25g' || all_products[i].product.product_type == 'PRO Keratin Tip 18" 25g' || all_products[i].product.product_type == 'PRO Keratin Tip 22" 25g' || all_products[i].product.product_type == 'PRO Keratin Tip 14" 25g' || all_products[i].product.product_type == 'PRO Keratin Tip 24" 25g' ){
+                  ktip_count += all_products[i].quantity
+                }
+              }
             }
-            // K tip hair extensions 
-            if(all_products[i].product.product_type == 'PRO Keratin Tip 16" 25g' || all_products[i].product.product_type == 'PRO Keratin Tip 20" 25g' || all_products[i].product.product_type == 'PRO Keratin Tip 18" 25g' || all_products[i].product.product_type == 'PRO Keratin Tip 22" 25g' || all_products[i].product.product_type == 'PRO Keratin Tip 14" 25g' || all_products[i].product.product_type == 'PRO Keratin Tip 24" 25g' ){
-              ktip_count += all_products[i].quantity
+            //console.log("all_products",all_products)
+            if(flex_weft_tape_count >= 3 || ktip_count >= 5){
+              console.log("ELLIGIBLE FOR FREE GIFT")
+              if(!existing_promo_product){
+                addTheCart()
+              }
+            }else{
+              console.log("NOT ELLIGIBLE FOR FREE GIFT")
+              if(gwp_key){
+                removeTheCart(gwp_key)
+              }
             }
           }
-        }
-        if(flex_weft_tape_count >= 3 || ktip_count >= 5){
-          console.log("ELLIGIBLE FOR FREE GIFT")
-          if(!existing_promo_product){
-            addToCart_2()
+      });
+    }
+    function addTheCart(){
+      let promo_variant_id = 43117300842530
+      let promo_product = {
+        items: [
+          {
+            id: promo_variant_id,
+            quantity: 1,
+            properties: {
+              _gwp: 'FREE'
+            }
           }
-        }else{
-          console.log("NOT ELLIGIBLE FOR FREE GIFT")
-          if(gwp_key){
-            removeItem_2(gwp_key)
-          }
+        ]
+      };
+      fetch('/cart/add.js', {
+        method: 'POST',
+        body: JSON.stringify(promo_product),
+        credentials: 'same-origin',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest'
         }
-      }
+      })
+      .then(response => response.json())
+      .then(function(data) {
+          if (data.status === 422) {
+              console.log('Error Add', data);
+          }else if(data.status === 404){
+              alert(data.description)
+          } else {
+              //console.log('Success Add', data);
+              console.log('PROMO PRODUCT ADDED !',data)
+              location.reload();
+          }
+      });
+    }
+    let removeTheCart = (gwp_key) => {
+      let update_params = {}
+      update_params[gwp_key] = 0
+      fetch('/cart/update.js', {
+        method: 'POST',
+        body: JSON.stringify({ updates : update_params }),
+        credentials: 'same-origin',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest'
+        }
     })
-  }
-  function addToCart_2(){
-    let promo_variant_id = 43117300842530
-    let promo_product = {
-      items: [
-        {
-          id: promo_variant_id,
-          quantity: 1,
-          properties: {
-            GWP: 'FREE'
-          }
+    .then(response => response.json())
+    .then(function(data) {
+        if (data.status === 422) {
+            console.log('Error Remove', data);
+        } else {
+            //console.log('Success Remove', data);
+            location.reload();
         }
-      ]
-    };
-    $.ajax({
-      method: "POST",
-      url: "/cart/add.js",
-      dataType: "json",
-      data: promo_product,
-      success: function(res) {
-        console.log('PROMO PRODUCT ADDED')
-        location.reload();
-      },
-      error: function(error) {
-        console.log(error);
-      }
     });
-  }
-  let removeItem_2 = (gwp_key) => {
-    $.ajax({
-      method: "POST",
-      url: "/cart/update.js",
-      dataType: "json",
-      data: "updates[" + gwp_key + "]=0",
-      success: function (response) {
-        location.reload();
-      },
-      error: function (error) {
-        console.log(error);
-      }
-    });
-  }
-  getCart_2()
+    }
+    getTheCart()
+  })();
 </script>
 {% schema %}
 {

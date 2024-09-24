@@ -3,7 +3,7 @@
 client_id = "98659bd10a7ece390562269fdcabe4a9"
 name = "discount-iq"
 handle = "discount-iq-1"
-application_url = "https://settlement-princess-ground-tolerance.trycloudflare.com"
+application_url = "https://rapid-occupied-bs-increase.trycloudflare.com"
 embedded = true
 
 [build]
@@ -17,9 +17,9 @@ scopes = "read_discounts,write_cart_transforms,write_discounts,write_products"
 
 [auth]
 redirect_urls = [
-  "https://settlement-princess-ground-tolerance.trycloudflare.com/auth/callback",
-  "https://settlement-princess-ground-tolerance.trycloudflare.com/auth/shopify/callback",
-  "https://settlement-princess-ground-tolerance.trycloudflare.com/api/auth/callback"
+  "https://rapid-occupied-bs-increase.trycloudflare.com/auth/callback",
+  "https://rapid-occupied-bs-increase.trycloudflare.com/auth/shopify/callback",
+  "https://rapid-occupied-bs-increase.trycloudflare.com/api/auth/callback"
 ]
 
 [webhooks]
