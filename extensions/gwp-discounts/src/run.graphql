@@ -1,0 +1,28 @@
+query RunInput($collectionIds: [ID!]) {
+  cart{
+    lines{
+      id
+      quantity
+      merchandise{
+        ... on ProductVariant{
+          id
+          product{
+            inCollections(ids: $collectionIds){
+              collectionId 
+              isMember
+            }
+          }
+        }
+        __typename
+      }
+      gwp: attribute(key: "_gwp") {
+        value
+      }
+  }
+  }
+  discountNode {
+    metafield(namespace: "$app:gwp-promotions", key: "promo_details") {
+      value
+    }
+  }
+}

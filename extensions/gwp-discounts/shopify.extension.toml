@@ -2,13 +2,13 @@ api_version = "2024-07"
 
 [[extensions]]
 name = "t:name"
-handle = "eric-vaughn-shades-func"
+handle = "gwp-discounts"
 type = "function"
 
 description = "t:description"
 
   [[extensions.targeting]]
-  target = "purchase.cart-transform.run"
+  target = "purchase.product-discount.run"
   input_query = "src/run.graphql"
   export = "run"
 
@@ -19,3 +19,7 @@ description = "t:description"
   [extensions.ui.paths]
   create = "/"
   details = "/"
+
+  [extensions.input.variables]
+  namespace = "$app:gwp-promotions"
+  key = "promo_qualifying_collections"

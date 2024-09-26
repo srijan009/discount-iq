@@ -1,0 +1,51 @@
+{
+  "promotions":[
+    {
+      "promoId": 1,
+      "incrementalGWP": false,
+      "promoType":"subtotal",
+      "thresholds":[
+        {
+          "threhold": 1,
+          "collections":[433669865722,433669832954,433669767418],
+          "discountCode": null,
+          "exclusion": {
+            "productTitle": [
+              "Eric Vaughn"
+            ]
+          },
+          "gift_id": 46672858874106
+        }
+      ],
+      "functionId": "3ccda03f-0da8-48e5-89c9-e34411260aeb"
+    },
+    {
+      "promoId": 2,
+      "promoType":"quantity",
+      "condition": "OR",
+      "exclusion": {
+        "productTitle": [
+          "Eric Vaughn"
+        ]
+      },
+      "thresholds":[
+        {
+          "threhold": 1,
+          "collectionQuantity":[
+            {
+              "collectionId": [433669865722,433669832954],
+              "quantity": 2
+            },
+            {
+              "collectionId": 433669767418,
+              "quantity": 5
+            }
+          ],
+          "exclusion": "productTitle",
+          "giftId": 46672858874106
+        }
+      ],
+      "functionId": "3ccda03f-0da8-48e5-89c9-e34411260aeb"
+    }
+  ]
+}

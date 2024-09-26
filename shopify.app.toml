@@ -3,7 +3,7 @@
 client_id = "98659bd10a7ece390562269fdcabe4a9"
 name = "discount-iq"
 handle = "discount-iq-1"
-application_url = "https://renewal-healthcare-loads-court.trycloudflare.com"
+application_url = "https://assets-conferences-holdem-ralph.trycloudflare.com"
 embedded = true
 
 [build]
@@ -13,13 +13,13 @@ include_config_on_deploy = true
 
 [access_scopes]
 # Learn more at https://shopify.dev/docs/apps/tools/cli/configuration#access_scopes
-scopes = "read_discounts,write_cart_transforms,write_discounts,write_products"
+scopes = "read_discounts,write_discounts,write_products"
 
 [auth]
 redirect_urls = [
-  "https://renewal-healthcare-loads-court.trycloudflare.com/auth/callback",
-  "https://renewal-healthcare-loads-court.trycloudflare.com/auth/shopify/callback",
-  "https://renewal-healthcare-loads-court.trycloudflare.com/api/auth/callback"
+  "https://assets-conferences-holdem-ralph.trycloudflare.com/auth/callback",
+  "https://assets-conferences-holdem-ralph.trycloudflare.com/auth/shopify/callback",
+  "https://assets-conferences-holdem-ralph.trycloudflare.com/api/auth/callback"
 ]
 
 [webhooks]
