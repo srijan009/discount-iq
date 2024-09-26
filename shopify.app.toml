@@ -3,7 +3,7 @@
 client_id = "98659bd10a7ece390562269fdcabe4a9"
 name = "discount-iq"
 handle = "discount-iq-1"
-application_url = "https://assets-conferences-holdem-ralph.trycloudflare.com"
+application_url = "https://richardson-courage-seattle-psychology.trycloudflare.com"
 embedded = true
 
 [build]
@@ -17,9 +17,9 @@ scopes = "read_discounts,write_discounts,write_products"
 
 [auth]
 redirect_urls = [
-  "https://assets-conferences-holdem-ralph.trycloudflare.com/auth/callback",
-  "https://assets-conferences-holdem-ralph.trycloudflare.com/auth/shopify/callback",
-  "https://assets-conferences-holdem-ralph.trycloudflare.com/api/auth/callback"
+  "https://richardson-courage-seattle-psychology.trycloudflare.com/auth/callback",
+  "https://richardson-courage-seattle-psychology.trycloudflare.com/auth/shopify/callback",
+  "https://richardson-courage-seattle-psychology.trycloudflare.com/api/auth/callback"
 ]
 
 [webhooks]

@@ -1,12 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
 import type { ActionFunctionArgs, LoaderFunctionArgs } from "@remix-run/node";
 import { Form, useSubmit } from "@remix-run/react"
-import { Page, Layout, PageActions, Card, BlockStack, InlineGrid, InlineStack, Text, TextField, RadioButton, Button } from "@shopify/polaris"
+import { Page, Layout, PageActions,Bleed, Card, BlockStack, InlineGrid, InlineStack, Text, TextField, RadioButton, Button, Box } from "@shopify/polaris"
 import {
   ActiveDatesCard,
   CombinationCard,
   DiscountClass,
-  DiscountMethod,
   MethodCard,
   DiscountStatus,
   RequirementType,
@@ -15,6 +14,7 @@ import {
 } from "@shopify/discount-app-components";
 import { authenticate } from "../shopify.server";
 import { useForm, useField } from "@shopify/react-form";
+import CollectionList from "../components/CollectionList"
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   await authenticate.admin(request);
@@ -27,13 +27,12 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
  */
 export default function create() {
   const [collections, setCollections] = useState([])
+  const [giftProduct, setGiftProduct] = useState([])
   const submitForm = useSubmit()
   const todaysDate = useMemo(() => new Date(), []);
   const {
     fields: {
       discountTitle,
-      discountCode,
-      discountMethod,
       combinesWith,
       requirementType,
       requirementSubtotal,
@@ -43,13 +42,12 @@ export default function create() {
       startDate,
       endDate,
       configuration,
+      promo_details
     },
     submit,
   } = useForm({
     fields: {
       discountTitle: useField(""),
-      discountMethod: useField(DiscountMethod.Code),
-      discountCode: useField(""),
       combinesWith: useField({
         orderDiscounts: false,
         productDiscounts: false,
@@ -66,12 +64,14 @@ export default function create() {
         max_quantity: useField('1'),
         threshold: useField("0"),
       },
+      promo_details:{
+        condition: useField('OR'),
+        thresholds: useField([])
+      }
     },
     onSubmit: async (form) => {
       const discount = {
         title: form.discountTitle,
-        method: form.discountMethod,
-        code: form.discountCode,
         combinesWith: form.combinesWith,
         usageLimit: form.usageLimit == null ? null : parseInt(form.usageLimit),
         appliesOncePerCustomer: form.appliesOncePerCustomer,
@@ -82,8 +82,8 @@ export default function create() {
           threshold: parseFloat(form.configuration.threshold),
         },
       };
-
-      submitForm({ discount: JSON.stringify(discount) }, { method: "post" });
+      console.log("form",form)
+      //submitForm({ discount: JSON.stringify(discount) }, { method: "post" });
 
       return { status: "success" };
     },
@@ -94,9 +94,18 @@ export default function create() {
     setCollections( (prevCollections) => [...prevCollections,selectedCollection])
     return
   }
+  const handleProductSelector = async () => {
+    const selectedProducts =  await shopify.resourcePicker({type: 'product'})
+    const selectedProduct = selectedProducts[0]
+    setGiftProduct(selectedProduct)
+  }
   useEffect( ()=>{
-    console.log("collections",collections)
+    //console.log("collections",collections)
   },[collections])
+  const removeCollection = (toRemoveCollection) => {
+    console.log("removed item",toRemoveCollection)
+    setCollections( (prevCollections ) =>prevCollections.filter( item => item.id !== toRemoveCollection.id) )
+  }
   return (
     <Page title="Create GWP Quantity Promo">
       <Layout.Section>
@@ -106,9 +115,8 @@ export default function create() {
               title="GWP"
               discountTitle={discountTitle}
               discountClass={DiscountClass.Product}
-              discountCode={discountCode}
               discountMethod="AUTOMATIC"
-              discountMethodHidden="true"
+              discountMethodHidden={true}
             />
             <Card>
               <BlockStack>
@@ -120,8 +128,8 @@ export default function create() {
                 <InlineStack >
                     <Text as="p">Condition must match</Text>
                     <InlineStack>
-                      <RadioButton label="any condition" name="condition"/>
-                      <RadioButton label="all condition" name="condition"/>
+                      <RadioButton label="any condition" name="condition" {...promo_details.condition} value="OR"/>
+                      <RadioButton label="all condition" name="condition" value="AND"/>
                     </InlineStack>
                 </InlineStack >
               </BlockStack>
@@ -130,23 +138,26 @@ export default function create() {
                   <Button size="medium" onClick={openShopifyResourcePicker}>+ Add the Collection</Button>
                 </div>
               </BlockStack>
+              {/* Collection List starts */}
+              <Bleed>
+                <CollectionList collections={collections}  removeCollection={removeCollection}/>
+              </Bleed>
+              {/* Collection List  ends*/}
             </Card>
             <Card>     
               <BlockStack gap="3">
                 <Text variant="headingMd" as="h2">
-                  GWP
+                  Gift Section
                 </Text>
                 <TextField
                   label="Maximum quantity"
                   autoComplete="on"
                   {...configuration.max_quantity}
                 />
-                <TextField
-                  label="GWP Threshold"
-                  autoComplete="on"
-                  {...configuration.threshold}
-                  prefix="$"
-                />
+                { giftProduct && <Box> {giftProduct.title}</Box>}
+                <div>
+                  <Button onClick={handleProductSelector}>Browse Product</Button>
+                </div>
               </BlockStack>
             </Card>
             <CombinationCard
@@ -166,7 +177,7 @@ export default function create() {
         <PageActions
           primaryAction={{
             content: "Save discount",
-            // onAction: submit,
+            onAction: submit,
             // loading: isLoading,
           }}
           secondaryActions={[
