@@ -1,0 +1,41 @@
+.threshold-left{
+  display: flex;
+  gap: 5px;
+  align-items: center;
+}
+.threshold-collection-counter{
+  min-width: 24px;
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+}
+.threshold-right {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.threshold-quantity > div{
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 15px;
+}
+.threshold-quantity input{
+  width: 105px;
+}
+.action-wrapper{
+  display: flex;
+  justify-content: flex-end;
+}
+.threshold-box{
+  margin: 15px 0;
+  border-bottom: 1px solid #f4f4f4;
+  border-top: 1px solid #f4f4f4;
+  padding: 5px 0;
+}
+.condition-wrapper{
+  margin: 0 0 10px 0;
+}
+.condition-section{
+  margin-bottom: 16px;
+}
