@@ -39,3 +39,24 @@
 .condition-section{
   margin-bottom: 16px;
 }
+.hidden{
+  display: none;
+}
+.threshold-wrapper{
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.threshold-image-holder{
+  display: flex;
+  align-items: center;
+}
+.gift-wrapper{
+  margin: 16px 0;
+}
+.rm-threshold{
+  cursor: pointer;
+}
+.product-selector-cta{
+  margin: 16px 0 0 0;
+}

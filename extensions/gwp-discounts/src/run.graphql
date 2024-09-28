@@ -21,7 +21,7 @@ query RunInput($collectionIds: [ID!]) {
   }
   }
   discountNode {
-    metafield(namespace: "$app:gwp-promotions", key: "promo_details") {
+    metafield(namespace: "$app:gwp-promotions", key: "promoDetails") {
       value
     }
   }

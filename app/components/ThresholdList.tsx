@@ -30,11 +30,11 @@ const renderItems = (fields: any , handleThresholdRemoval : any) => {
             <div className="threshold-collection-counter">
               {/* {++index} */}
             </div>
-            <div className="threshold-collection-wrapper">
-              <div>
+            <div className="threshold-wrapper">
+              <div className="threshold-image-holder">
                 {field.collectionImage.value ? <Thumbnail size="small" source={field.collectionImage.value} alt="collection-image" /> : <ImageIcon width="40" />}
               </div>
-              <div>
+              <div className="threshold-text-holder">
                 {field.collectionTitle.value}
               </div>
             </div>
@@ -54,7 +54,7 @@ const renderItems = (fields: any , handleThresholdRemoval : any) => {
           </div>
         </div>
         <div className="action-wrapper">
-          <div>
+          <div className="rm-threshold">
             <XIcon width="35" onClick={() => handleThresholdRemoval(index)} />
           </div>
         </div>

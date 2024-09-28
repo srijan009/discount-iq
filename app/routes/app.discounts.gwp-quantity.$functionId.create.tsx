@@ -1,21 +1,41 @@
 import { useEffect, useMemo, useState } from "react";
 import type { ActionFunctionArgs, LoaderFunctionArgs } from "@remix-run/node";
 import { Form, useSubmit } from "@remix-run/react"
+// import shopify from "../shopify.server";
 import { Page, Layout, PageActions, Bleed, Card, BlockStack, InlineGrid, InlineStack, Text, TextField, RadioButton, Button, Box } from "@shopify/polaris"
 import {
   ActiveDatesCard,
   CombinationCard,
   DiscountClass,
   MethodCard,
-  DiscountStatus,
   RequirementType,
-  SummaryCard,
-  UsageLimitsCard,
 } from "@shopify/discount-app-components";
-import { authenticate } from "../shopify.server";
 import { useForm, useField, asChoiceField, useDynamicList } from "@shopify/react-form";
 import ThresholdList from "../components/ThresholdList"
+import GiftProductCard from "app/components/GiftProductCard";
+export const action = async ( { params, request}) => {
+  const { functionId } = params;
+  //const { admin } = await shopify.authenticate.admin(request);
+  const formData = await request.formData();
+  const {
+    title,
+    method,
+    combinesWith,
+    startsAt,
+    endsAt,
+    promoDetails,
+  } = JSON.parse(formData.get("discount"));
+  const baseDiscount = {
+    functionId,
+    title,
+    combinesWith,
+    startsAt: new Date(startsAt),
+    endsAt: endsAt && new Date(endsAt),
+  };
+  console.log("baseDiscount",baseDiscount)
+  return null
 
+}
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   await authenticate.admin(request);
 
@@ -34,7 +54,6 @@ type Threshold = {
 }
 
 export default function create() {
-  const [collections, setCollections] = useState([])
   const [giftProduct, setGiftProduct] = useState(null)
   const submitForm = useSubmit()
   const todaysDate = useMemo(() => new Date(), []);
@@ -46,8 +65,7 @@ export default function create() {
       combinesWith,
       startDate,
       endDate,
-      configuration,
-      promo_details,
+      promoDetails,
     },
     submit,
   } = useForm<any>({
@@ -61,16 +79,12 @@ export default function create() {
       requirementType: useField(RequirementType.None),
       requirementSubtotal: useField("0"),
       requirementQuantity: useField("0"),
-      usageLimit: useField(null),
-      appliesOncePerCustomer: useField(false),
       startDate: useField(todaysDate),
       endDate: useField(null),
-      configuration: {
-        max_quantity: useField('1'),
-      },
-      promo_details: {
+      promoDetails: {
         condition: useField('OR'),
         giftVariantId: useField(''),
+        maxQuantity:useField(''),
         threshold: fields
       },
     }
@@ -79,17 +93,11 @@ export default function create() {
       const discount = {
         title: form.discountTitle,
         combinesWith: form.combinesWith,
-        usageLimit: form.usageLimit == null ? null : parseInt(form.usageLimit),
-        appliesOncePerCustomer: form.appliesOncePerCustomer,
         startsAt: form.startDate,
         endsAt: form.endDate,
-        configuration: {
-          max_quantity: parseInt(form.configuration.max_quantity),
-          threshold: parseFloat(form.configuration.threshold),
-        },
       };
       console.log("form", form)
-      //submitForm({ discount: JSON.stringify(discount) }, { method: "post" });
+      submitForm({ discount: JSON.stringify(discount) }, { method: "post" });
 
       return { status: "success" };
     },
@@ -110,11 +118,13 @@ export default function create() {
         variants: false
       }
     })
-    const selectedProduct = selectedProducts[0]
-    const variant = selectedProduct.variants[0]
-    console.log(selectedProduct)
-    setGiftProduct(selectedProduct)
-    promo_details.giftVariantId.value = variant.id
+    if(selectedProducts){
+      const selectedProduct = selectedProducts[0]
+      const variant = selectedProduct.variants[0]
+      console.log(selectedProduct)
+      setGiftProduct(selectedProduct)
+      promoDetails.giftVariantId.value = variant.id
+    }
   }
   const handleThresholdRemoval = (removeThresholdIndex: number) => {
     if (removeThresholdIndex == 0) {
@@ -126,10 +136,6 @@ export default function create() {
     }
     console.log(removeThresholdIndex, fields)
   }
-  useEffect(() => {
-    //addItem({ id : "123456", quantity: 0})
-    console.log("dynamiclist", fields)
-  }, [])
   return (
     <Page title="Create GWP Quantity Promo">
       <Layout.Section>
@@ -155,8 +161,8 @@ export default function create() {
                       <InlineStack blockAlign="center">
                         <Text as="p">Condition must match</Text>
                         <InlineStack>
-                          <RadioButton label="any condition" name="condition" {...asChoiceField(promo_details.condition, 'OR')} />
-                          <RadioButton label="all condition" name="condition" {...asChoiceField(promo_details.condition, 'AND')} />
+                          <RadioButton label="any condition" name="condition" {...asChoiceField(promoDetails.condition, 'OR')} />
+                          <RadioButton label="all condition" name="condition" {...asChoiceField(promoDetails.condition, 'AND')} />
                         </InlineStack>
                       </InlineStack >
                     </div>
@@ -179,23 +185,27 @@ export default function create() {
                 <Text variant="headingMd" as="h2">
                   Gift Section
                 </Text>
-                <TextField
-                  label="Maximum quantity"
-                  autoComplete="on"
-                  {...configuration.max_quantity}
-                />
+                <div>
+                  <InlineGrid>
+                    <TextField
+                      label="Maximum quantity"
+                      autoComplete="on"
+                      {...promoDetails.maxQuantity}
+                    />
+                    <div className="product-selector-cta">
+                      <Button onClick={handleProductSelector}>Browse Product</Button>
+                    </div>
+                  </InlineGrid>
+                </div>
                 {giftProduct &&
                   <Box>
-                    {giftProduct.title}
-                    <div>
+                    <GiftProductCard giftProduct={giftProduct} />
+                    <div className="hidden">
                       <TextField
-                        {...promo_details.giftVariantId}
+                        {...promoDetails.giftVariantId}
                       />
                     </div>
                   </Box>}
-                <div>
-                  <Button onClick={handleProductSelector}>Browse Product</Button>
-                </div>
               </BlockStack>
             </Card>
             <CombinationCard
