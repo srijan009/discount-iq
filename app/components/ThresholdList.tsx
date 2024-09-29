@@ -45,8 +45,7 @@ const renderItems = (fields: any , handleThresholdRemoval : any) => {
               <TextField
                 placeholder="Quantity Threshold"
                 label="Quantity Threshold"
-                value={field.thresholdQuantity.value}
-                onChange={field.thresholdQuantity.onChange}
+                {...field.quantity}
                 autoComplete="off"
                 align="center"
               />

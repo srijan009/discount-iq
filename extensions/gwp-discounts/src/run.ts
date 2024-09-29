@@ -36,7 +36,7 @@ export function run(input: RunInput): FunctionRunResult {
           //lineItem.merchandise.product.inCollections
           const lineItemCols = lineItem.merchandise.product.inCollections
           for(let lineItemCol of lineItemCols){
-            if(lineItemCol.isMember && lineItemCol.collectionId == `gid://shopify/Collection/${threshold.collectionId}`){
+            if(lineItemCol.isMember && lineItemCol.collectionId === `${threshold.collectionId}`){
               totalQuantity += lineItem.quantity
             }
           }

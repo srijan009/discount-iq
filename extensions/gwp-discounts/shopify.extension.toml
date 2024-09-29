@@ -17,8 +17,8 @@ description = "t:description"
   path = "dist/function.wasm"
 
   [extensions.ui.paths]
-  create = "/"
-  details = "/"
+  create = "/app/discounts/gwp-quantity/:functionId/create"
+  details = "/app/discounts/gwp-quantity/:functionId/:id/edit"
 
   [extensions.input.variables]
   namespace = "$app:gwp-promotions"

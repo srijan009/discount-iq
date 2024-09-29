@@ -14,11 +14,8 @@
   justify-content: space-between;
   align-items: center;
 }
-.threshold-quantity > div{
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 15px;
+.threshold-quantity{
+  text-align: center;
 }
 .threshold-quantity input{
   width: 105px;
@@ -59,4 +56,21 @@
 }
 .product-selector-cta{
   margin: 16px 0 0 0;
+}
+.icon-wrapper{
+  display: flex;
+  align-items: center;
+}
+.icon-wrapper > span{
+  display: inline-block;
+  margin: auto;
+}
+.custom-validation-msg {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  margin: 0.5rem 0;
+}
+.gift-section{
+  margin-bottom: 1rem;
 }
