@@ -113,9 +113,7 @@ export const action = async ({ params, request }: ActionFunctionArgs) => {
         },
       },
     );
-    
-    const data = await response.json();
-    return json({ status: 'success', promoDeleted: data, editedMessage: true })
+    return redirect('/app')
   }
 }
 export const loader = async ({ request, params }: LoaderFunctionArgs) => {
@@ -313,7 +311,6 @@ export default function edit() {
   const handleDeleteDiscount = (discountId: string) => {
     console.log("Delete Discount", discountId)
     const formData = new FormData()
-    formData.append("discountId",discountId)
     submitForm({ discountId, action: 'DELETE' }, { method: "post" });
   }
   return (
