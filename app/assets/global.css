@@ -74,3 +74,13 @@
 .gift-section{
   margin-bottom: 1rem;
 }
+.success-banner{
+  padding: 16px;
+  background-color: var(--p-color-bg-fill-success-hover);
+  border-radius: var(--p-border-radius-400);
+  margin-bottom: 16px;
+}
+.success-banner p {
+  color: #fff;
+  font-weight: 900;
+}

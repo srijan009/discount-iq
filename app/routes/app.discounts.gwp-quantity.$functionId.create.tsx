@@ -4,24 +4,20 @@ import { json, redirect } from "@remix-run/node";
 import { Form, useSubmit, useActionData } from "@remix-run/react"
 // import shopify from "../shopify.server";
 import { Page, Layout, PageActions, Bleed, Card, BlockStack, InlineGrid, InlineStack, Text, TextField, RadioButton, Button, Box, Icon } from "@shopify/polaris"
-import {
-  AlertCircleIcon,
-} from '@shopify/polaris-icons';
+
 import {
   ActiveDatesCard,
-  CombinationCard,
   DiscountClass,
   MethodCard,
   RequirementType,
-  DiscountMethod
-} from "@shopify/discount-app-components";
+  } from "@shopify/discount-app-components";
 import { useForm, useField, asChoiceField, useDynamicList } from "@shopify/react-form";
 import ThresholdList from "../components/ThresholdList"
 import GiftProductCard from "app/components/GiftProductCard";
 import CustomValidationMessage from "app/components/CustomValidationMessage";
 //import shopify from "app/shopify.server";
 import { authenticate } from "../shopify.server";
-export const action = async ({ params, request }) => {
+export const action = async ({ params, request }: ActionFunctionArgs) => {
   const { functionId } = params;
   const { admin } = await authenticate.admin(request)
   const formData = await request.formData();
@@ -68,13 +64,13 @@ export const action = async ({ params, request }) => {
               namespace: "$app:gwp-promotions",
               key: "promoDetails",
               type: "json",
-              value: JSON.stringify(JSON.stringify(promoDetails)),
+              value: JSON.stringify(promoDetails),
             },
             {
               namespace: "$app:gwp-promotions",
               key: "promo_qualifying_collections",
               type: "json",
-              value: JSON.stringify(JSON.stringify(functionPayload)),
+              value: JSON.stringify(functionPayload),
             },
           ],
         },
@@ -82,6 +78,7 @@ export const action = async ({ params, request }) => {
     }
   );
   const responseJson = await response.json();
+  //console.log(JSON.stringify(responseJson))
   const errors = responseJson.data.discountCreate?.userErrors;
   if (errors.length > 0) {
     return json({ errors });
@@ -89,7 +86,7 @@ export const action = async ({ params, request }) => {
   const discountGid: string = responseJson.data.discountCreate?.automaticAppDiscount.discountId
   const discountGidArr = discountGid.split('/')
   const discountId = discountGidArr[discountGidArr.length - 1]
-  return redirect(`/app/discounts/gwp-quantity/${functionId}/${discountId}/edit?message=success`)
+  return redirect(`/app/discounts/gwp-quantity/${functionId}/${discountId}`)
 
 }
 export const loader = async ({ request }: LoaderFunctionArgs) => {
@@ -165,7 +162,7 @@ export default function create() {
       promoDetails: {
         promoType: 'gwp_quantity',
         condition: useField('OR'),
-        giftVariantId: '',
+        giftVariantId: useField(''),
         maxQuantity: useField({
           value: 0,
           validates: [
@@ -196,7 +193,7 @@ export default function create() {
           }
         })
       }
-      if(promoDetails.giftVariantId === '' ){
+      if(promoDetails.giftVariantId === null ){
         setCustomValidationMsgs((prevValues : any ) => {
           return {
             ...prevValues,
@@ -229,7 +226,7 @@ export default function create() {
       const variant = selectedProduct.variants[0]
       //console.log(selectedProduct)
       setGiftProduct(selectedProduct)
-      promoDetails.giftVariantId.value = variant.id
+      promoDetails.giftVariantId.value = JSON.stringify(selectedProduct)
     }
   }
   const handleThresholdRemoval = (removeThresholdIndex: number) => {
@@ -241,6 +238,9 @@ export default function create() {
       removeItem(removeThresholdIndex)
     }
     console.log(removeThresholdIndex, fields)
+  }
+  const handleDeleteDiscount = () => {
+    console.log("Handle Discount Delete")
   }
   return (
     <Page title="Create GWP Quantity Promo">
@@ -336,8 +336,8 @@ export default function create() {
           }}
           secondaryActions={[
             {
-              content: "Discard",
-              // onAction: () => onBreadcrumbAction(redirect, true),
+              content: "Delete Discount",
+              onAction: () => handleDeleteDiscount,
             },
           ]}
         />

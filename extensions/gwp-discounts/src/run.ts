@@ -12,21 +12,25 @@ const EMPTY_DISCOUNT: FunctionRunResult = {
 };
 type Thresold = {
   collectionId : number
-  quantity: number
+  collectionImage: string
+  collectionTitle: string
+  quantity: number,
 }
 type PromoDetail = {
   promoType: string
+  condition: string
+  giftVariantId: string
   thresholds: Thresold[] 
 };
 
 export function run(input: RunInput): FunctionRunResult {
   console.log("GWP Promotion Running")
   const lineItems = input.cart.lines
-  const promoDetail: PromoDetail = JSON.parse(
+  let promoDetail: PromoDetail = JSON.parse(
     input?.discountNode?.metafield?.value ?? "{}"
   );
-  let quantityPromo = false
-  //console.log(JSON.stringify(promoDetail))
+  let quantityPromo = false 
+  //console.log("promoDetail",promoDetail.promoType)
   if(promoDetail.promoType == 'gwp_quantity'){
     let results = []
     for(let threshold of promoDetail.thresholds){
