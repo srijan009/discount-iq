@@ -6,22 +6,13 @@ import {
   DiscountApplicationStrategy,
 } from "../generated/api";
 
+import { PromoDetail, Product } from "./types/global"
+
 const EMPTY_DISCOUNT: FunctionRunResult = {
   discountApplicationStrategy: DiscountApplicationStrategy.First,
   discounts: [],
 };
-type Thresold = {
-  collectionId : number
-  collectionImage: string
-  collectionTitle: string
-  quantity: number,
-}
-type PromoDetail = {
-  promoType: string
-  condition: string
-  giftVariantId: string
-  thresholds: Thresold[] 
-};
+
 
 export function run(input: RunInput): FunctionRunResult {
   console.log("GWP Promotion Running")
@@ -29,7 +20,8 @@ export function run(input: RunInput): FunctionRunResult {
   let promoDetail: PromoDetail = JSON.parse(
     input?.discountNode?.metafield?.value ?? "{}"
   );
-  let quantityPromo = false 
+  const giftProduct : Product = JSON.parse(promoDetail.giftProduct)
+  let quantityPromo: boolean = false 
   //console.log("promoDetail",promoDetail.promoType)
   if(promoDetail.promoType == 'gwp_quantity'){
     let results = []
@@ -53,22 +45,24 @@ export function run(input: RunInput): FunctionRunResult {
         qualifies
       })
     }
-    //console.log"results!",JSON.stringify(results))
-    for(let result of results){
-        if(result.qualifies){
-          quantityPromo = true
-        }
+    if(promoDetail.condition === 'OR'){
+      quantityPromo = results.some( result => result.qualifies )
+    }
+    if(promoDetail.condition === 'AND'){
+      quantityPromo = results.every( result => result.qualifies )
     }
   }
   const targets = []
   for(let lineItem of lineItems){
     if(lineItem.gwp?.value && lineItem.gwp?.value == 'FREE' && quantityPromo){
-      targets.push({
-        cartLine:{
-          id: lineItem.id,
-          quantity: 1
-        }
-      })
+      if(lineItem.merchandise.__typename == 'ProductVariant' && lineItem.merchandise.product.id == giftProduct.id ){
+        targets.push({
+          cartLine:{
+            id: lineItem.id,
+            quantity: parseInt(promoDetail.maxQuantity)
+          }
+        })
+      }
     }
   }
   const APPLY_DISCOUNT = {

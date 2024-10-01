@@ -162,7 +162,7 @@ export default function create() {
       promoDetails: {
         promoType: 'gwp_quantity',
         condition: useField('OR'),
-        giftVariantId: useField(''),
+        giftProduct: useField(''),
         maxQuantity: useField({
           value: 0,
           validates: [
@@ -193,7 +193,7 @@ export default function create() {
           }
         })
       }
-      if(promoDetails.giftVariantId === null ){
+      if(promoDetails.giftProduct === null ){
         setCustomValidationMsgs((prevValues : any ) => {
           return {
             ...prevValues,
@@ -226,7 +226,7 @@ export default function create() {
       const variant = selectedProduct.variants[0]
       //console.log(selectedProduct)
       setGiftProduct(selectedProduct)
-      promoDetails.giftVariantId.value = JSON.stringify(selectedProduct)
+      promoDetails.giftProduct.value = JSON.stringify(selectedProduct)
     }
   }
   const handleThresholdRemoval = (removeThresholdIndex: number) => {
@@ -311,7 +311,7 @@ export default function create() {
                       <GiftProductCard giftProduct={giftProduct} />
                       <div className="hidden">
                         <TextField
-                          {...promoDetails.giftVariantId}
+                          {...promoDetails.giftProduct}
                         />
                       </div>
                     </Box>}

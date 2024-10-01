@@ -7,6 +7,7 @@ query RunInput($collectionIds: [ID!]) {
         ... on ProductVariant{
           id
           product{
+            id
             inCollections(ids: $collectionIds){
               collectionId 
               isMember
