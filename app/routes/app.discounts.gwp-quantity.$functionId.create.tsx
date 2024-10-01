@@ -1,16 +1,15 @@
-import { useMemo, useState } from "react";
+import { useMemo , useEffect } from "react";
 import type { ActionFunctionArgs, LoaderFunctionArgs } from "@remix-run/node";
 import { json, redirect } from "@remix-run/node";
-import { Form, useSubmit, useActionData } from "@remix-run/react"
+import { Form, useSubmit, useActionData , useNavigate } from "@remix-run/react"
 // import shopify from "../shopify.server";
-import { Page, Layout, PageActions, Bleed, Card, BlockStack, InlineGrid, InlineStack, Text, TextField, RadioButton, Button, Box, Icon } from "@shopify/polaris"
+import { Page, Layout, PageActions, Bleed, Card, BlockStack, InlineGrid, InlineStack, Text, TextField, RadioButton, Button, Box } from "@shopify/polaris"
 
 import {
   ActiveDatesCard,
   DiscountClass,
   MethodCard,
-  RequirementType,
-  } from "@shopify/discount-app-components";
+} from "@shopify/discount-app-components";
 import { useForm, useField, asChoiceField, useDynamicList } from "@shopify/react-form";
 import ThresholdList from "../components/ThresholdList"
 import GiftProductCard from "app/components/GiftProductCard";
@@ -23,7 +22,6 @@ export const action = async ({ params, request }: ActionFunctionArgs) => {
   const formData = await request.formData();
   const {
     title,
-    method,
     combinesWith,
     startsAt,
     endsAt,
@@ -40,7 +38,7 @@ export const action = async ({ params, request }: ActionFunctionArgs) => {
   const functionPayload = {
     collectionIds: promoQualifyingCollectionIds
   }
-  console.log("functionPayload",functionPayload)
+  console.log("functionPayload", functionPayload)
   const response = await admin.graphql(
     `#graphql
         mutation CreateAutomaticDiscount($discount: DiscountAutomaticAppInput!) {
@@ -81,12 +79,13 @@ export const action = async ({ params, request }: ActionFunctionArgs) => {
   //console.log(JSON.stringify(responseJson))
   const errors = responseJson.data.discountCreate?.userErrors;
   if (errors.length > 0) {
-    return json({ errors });
+    return json({ status: 'failed', data: errors });
   }
   const discountGid: string = responseJson.data.discountCreate?.automaticAppDiscount.discountId
   const discountGidArr = discountGid.split('/')
   const discountId = discountGidArr[discountGidArr.length - 1]
-  return redirect(`/app/discounts/gwp-quantity/${functionId}/${discountId}`)
+  const targetUrl = `/app/discounts/gwp-quantity/${functionId}/${discountId}/edit`
+  return { status: 'success' , data: targetUrl}
 
 }
 export const loader = async ({ request }: LoaderFunctionArgs) => {
@@ -95,28 +94,24 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
   return null;
 };
 /**
- * Discount Form Variablews
+ * Discount Form Variables
  * @returns 
  */
 type Threshold = {
   collectionImage: string,
   collectionId: string,
   collectionTitle: string,
-  quantity: any,
+  quantity: string,
 
 }
 
 export default function create() {
-  const [giftProduct, setGiftProduct] = useState(null)
-  const [customValidationMsgs , setCustomValidationMsgs] = useState({
-      collectionUnchecked : false,
-      productUnchecked : false
-  })
   const submitForm = useSubmit()
   const actionData = useActionData()
+  const navigate = useNavigate()
   const todaysDate = useMemo(() => new Date(), []);
-  const thresholdFactory = ({ collectionImage, collectionId, collectionTitle, quantity }: any): any => ({
-    collectionImage, collectionId, collectionTitle, quantity: 0
+  const thresholdFactory = ({ collectionImage, collectionId, collectionTitle, quantity }: Threshold): any => ({
+    collectionImage, collectionId, collectionTitle, quantity: 1
   })
   const { fields, addItem, removeItem } = useDynamicList({
     list: [
@@ -124,7 +119,7 @@ export default function create() {
     validates: {
       quantity: (quantity) => {
         if (quantity <= 0) {
-          return "Threshold Must Be greater than 3"
+          return "Threshold must be greater than 0"
         }
       }
     }
@@ -144,7 +139,7 @@ export default function create() {
         validates: [
           (value) => {
             if (value == '') {
-              return 'Discount Title is Required';
+              return 'Discount title is required';
             }
           }
         ]
@@ -154,21 +149,27 @@ export default function create() {
         productDiscounts: false,
         shippingDiscounts: false,
       }),
-      requirementType: useField(RequirementType.None),
-      requirementSubtotal: useField("0"),
-      requirementQuantity: useField("0"),
       startDate: useField(todaysDate),
       endDate: useField(null),
       promoDetails: {
         promoType: 'gwp_quantity',
         condition: useField('OR'),
-        giftProduct: useField(''),
+        giftProduct: useField({
+          value: '',
+          validates:[
+            (value)=>{
+              if(value == ''){
+                return 'Please choose the gift product'
+              }
+            }
+          ]
+        }),
         maxQuantity: useField({
-          value: 0,
+          value: 1,
           validates: [
             (value: number) => {
               if (value <= 0) {
-                return "Gift Quantity must be greater than 0"
+                return "Gift quantity must be greater than 0"
               }
             }
           ]
@@ -185,27 +186,24 @@ export default function create() {
         endsAt: form.endDate,
         promoDetails: form.promoDetails
       };
-      if(promoDetails.thresholds.length <= 0 ){
-        setCustomValidationMsgs((prevValues : any ) => {
-          return {
-            ...prevValues,
-            collectionUnchecked : true
-          }
-        })
-      }
-      if(promoDetails.giftProduct === null ){
-        setCustomValidationMsgs((prevValues : any ) => {
-          return {
-            ...prevValues,
-            productUnchecked : true
-          }
-        })
+      if(fields.length === 0){
+        return { status: 'fail', errors: []}
       }
       submitForm({ discount: JSON.stringify(discount) }, { method: "post" });
-
       return { status: "success" };
     },
   });
+  useEffect( () => {
+    console.log("hsadgf",actionData)
+    if(actionData?.status == 'success' ) {
+      shopify.toast.show('Promo gift with purchased is saved successfully', {
+        duration: 5000,
+      });
+      if(actionData?.data){
+        navigate(actionData?.data)
+      }
+    }
+  }, [actionData])
   const handleCollectionPicker = async () => {
     const selectedCollections = await shopify.resourcePicker({ type: 'collection' })
     if (selectedCollections) {
@@ -223,10 +221,7 @@ export default function create() {
     })
     if (selectedProducts) {
       const selectedProduct = selectedProducts[0]
-      const variant = selectedProduct.variants[0]
-      //console.log(selectedProduct)
-      setGiftProduct(selectedProduct)
-      promoDetails.giftProduct.value = JSON.stringify(selectedProduct)
+      promoDetails.giftProduct.onChange(JSON.stringify(selectedProduct))
     }
   }
   const handleThresholdRemoval = (removeThresholdIndex: number) => {
@@ -279,7 +274,7 @@ export default function create() {
                   <div>
                     <Button size="medium" onClick={handleCollectionPicker}>+ Add the Collection</Button>
                   </div>
-                  {customValidationMsgs.collectionUnchecked  && <CustomValidationMessage message="Please choose the collection eligible for gift" />}
+                  {fields.length <= 0 && <CustomValidationMessage message="Please choose the collection eligible for gift" />}
                 </BlockStack>
                 {/* Collection List starts */}
                 <Bleed>
@@ -290,32 +285,33 @@ export default function create() {
             </div>
             <div className="gift-section">
               <Card>
-                <BlockStack gap="3">
+                <BlockStack>
                   <Text variant="headingMd" as="h2">
                     Gift Section
                   </Text>
                   <div>
                     <InlineGrid>
                       <TextField
-                        label="Maximum quantity"
-                        autoComplete="on"
                         {...promoDetails.maxQuantity}
                       />
                       <div className="product-selector-cta">
                         <Button onClick={handleProductSelector}>Browse Product</Button>
                       </div>
+                      {promoDetails.giftProduct.value == '' ? <CustomValidationMessage message="Please choose the gift product" /> : ''}
                     </InlineGrid>
                   </div>
-                  {giftProduct &&
+                  <Box>
+                  {promoDetails.giftProduct.value != '' &&
                     <Box>
-                      <GiftProductCard giftProduct={giftProduct} />
-                      <div className="hidden">
-                        <TextField
-                          {...promoDetails.giftProduct}
-                        />
-                      </div>
-                    </Box>}
-                  {customValidationMsgs.productUnchecked && <CustomValidationMessage message="Please select the gift product" />}
+                      <GiftProductCard giftProduct={JSON.parse(promoDetails.giftProduct.value)} />
+                    </Box>
+                    }
+                    <div className="hidden">
+                      <TextField
+                        {...promoDetails.giftProduct}
+                      />
+                    </div>
+                  </Box>
                 </BlockStack>
               </Card>
             </div>

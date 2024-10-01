@@ -120,7 +120,6 @@ export const loader = async ({ request, params }: LoaderFunctionArgs) => {
   const { admin } = await authenticate.admin(request);
   const { id } = params;
 
-  const message = new URL(request.url).searchParams.get('message');
   const response = await admin.graphql(`
       query PromoDetail{
         discountNode(id: "gid://shopify/DiscountAutomaticNode/${id}") {
@@ -154,27 +153,21 @@ export const loader = async ({ request, params }: LoaderFunctionArgs) => {
     
     `)
   const responseJson = await response.json();
-  if (message && message == 'success') {
-    return json({ status: 'success', promoDetail: responseJson.data, successMessage: true });
-  }
   if(!responseJson.data){
     return redirect("/app")
   }
 
-  return json({ status: 'success', promoDetail: responseJson.data, successMessage: false });
+  return json({ status: 'success', data: responseJson.data});
 
 };
 export default function edit() {
-  const { promoDetail, successMessage } = useLoaderData<typeof loader>();
-  const mainMetafieldId = promoDetail?.discountNode?.promoDetails.id
-  const collectionMetafieldId = promoDetail?.discountNode?.promo_qualifying_collections.id
-  const additionalDetails: any = JSON.parse(promoDetail?.discountNode?.promoDetails?.value || {})
-  console.log("additionalDetails.giftVariantId",additionalDetails)
-  const [giftProduct, setGiftProduct] = useState(JSON.parse(additionalDetails?.giftVariantId))
-  const [customValidationMsgs, setCustomValidationMsgs] = useState({
-    collectionUnchecked: false,
-    productUnchecked: false
-  })
+  const { data } = useLoaderData<typeof loader>();
+  const mainMetafieldId = data?.discountNode?.promoDetails.id
+  const collectionMetafieldId = data?.discountNode?.promo_qualifying_collections.id
+  const additionalDetails: any = JSON.parse(data?.discountNode?.promoDetails?.value || {})
+
+  const [giftProduct, setGiftProduct] = useState(JSON.parse(additionalDetails.giftProduct))
+
   const submitForm = useSubmit()
   const actionData = useActionData()
   const todaysDate = useMemo(() => new Date(), []);
@@ -203,7 +196,7 @@ export default function edit() {
   } = useForm<any>({
     fields: {
       discountTitle: useField({
-        value: promoDetail?.discountNode?.discount?.title,
+        value: data?.discountNode?.discount?.title,
         validates: [
           (value) => {
             if (value == '') {
@@ -220,15 +213,24 @@ export default function edit() {
       requirementType: useField(RequirementType.None),
       requirementSubtotal: useField("0"),
       requirementQuantity: useField("0"),
-      startDate: useField(promoDetail?.discountNode?.discount?.startsAt),
-      endDate: useField(promoDetail?.discountNode?.discount?.endsAt),
+      startDate: useField(data?.discountNode?.discount?.startsAt),
+      endDate: useField(data?.discountNode?.discount?.endsAt),
       promoDetails: {
         promoType: 'gwp_quantity',
         promoMetafieldId: useField(mainMetafieldId),
         promoInputMetafieldId: useField(collectionMetafieldId),
         // promoInputMetafieldId: useField(inputMetafieldId),
         condition: useField(additionalDetails.condition),
-        giftVariantId: useField(additionalDetails.giftVariantId),
+        giftProduct: useField({
+          value: additionalDetails.giftProduct,
+          validates:[
+            (value)=>{
+              if(value == ''){
+                return 'Please choose the gift product'
+              }
+            }
+          ]
+        }),
         maxQuantity: useField({
           value: additionalDetails.maxQuantity,
           validates: [
@@ -251,26 +253,9 @@ export default function edit() {
         endsAt: form.endDate,
         promoDetails: form.promoDetails
       };
-      if (promoDetails.thresholds.length <= 0) {
-        setCustomValidationMsgs((prevValues: any) => {
-          return {
-            ...prevValues,
-            collectionUnchecked: true
-          }
-        })
-        return { status: "fail", errors: [] };
-      }
-      if (promoDetails.giftVariantId === '') {
-        setCustomValidationMsgs((prevValues: any) => {
-          return {
-            ...prevValues,
-            productUnchecked: true
-          }
-        })
-        return { status: "fail", errors: [] };
-      }
+
       //console.log("discount",discount)
-      submitForm({ discount: JSON.stringify(discount), action: 'UPDATE' }, { method: "post" });
+      //submitForm({ discount: JSON.stringify(discount), action: 'UPDATE' }, { method: "post" });
 
       return { status: "success" };
     },
@@ -292,10 +277,7 @@ export default function edit() {
     })
     if (selectedProducts) {
       const selectedProduct = selectedProducts[0]
-      const variant = selectedProduct.variants[0]
-      //console.log(variant)
-      setGiftProduct(selectedProduct)
-      promoDetails.giftVariantId.value = JSON.stringify(selectedProduct)
+      promoDetails.giftProduct.onChange(JSON.stringify(selectedProduct))
     }
   }
   const handleThresholdRemoval = (removeThresholdIndex: number) => {
@@ -316,7 +298,7 @@ export default function edit() {
   return (
     <Page title="Edit GWP Quantity Promo">
       <Layout.Section>
-        {successMessage && !actionData?.editedMessage && <SuccessBanner message="Promo Created Successfully" />}
+        {/* {successMessage && !actionData?.editedMessage && <SuccessBanner message="Promo Created Successfully" />} */}
         {actionData?.editedMessage && <SuccessBanner message="Promo Edited Successfully" />}
         <Form method="post">
           {/* {actionData?.errors ? JSON.stringify(actionData?.errors) : ''} */}
@@ -352,7 +334,7 @@ export default function edit() {
                   <div>
                     <Button size="medium" onClick={handleCollectionPicker}>+ Add the Collection</Button>
                   </div>
-                  {customValidationMsgs.collectionUnchecked && <CustomValidationMessage message="Please choose the collection eligible for gift" />}
+                  {/* {customValidationMsgs.collectionUnchecked && <CustomValidationMessage message="Please choose the collection eligible for gift" />} */}
                 </BlockStack>
                 {/* Collection List starts */}
                 <Bleed>
@@ -379,16 +361,19 @@ export default function edit() {
                       </div>
                     </InlineGrid>
                   </div>
-                  {giftProduct &&
+                  <Box>
+                    {promoDetails.giftProduct.value != '' &&
                     <Box>
-                      <GiftProductCard giftProduct={giftProduct} />
-                      <div className="hidden">
-                        <TextField
-                          {...promoDetails.giftVariantId}
-                        />
-                      </div>
-                    </Box>}
-                  {customValidationMsgs.productUnchecked && <CustomValidationMessage message="Please select the gift product" />}
+                      <GiftProductCard giftProduct={JSON.parse(promoDetails.giftProduct.value)} />
+                    </Box>
+                    }
+                    <div className="hidden">
+                      <TextField
+                        {...promoDetails.giftProduct}
+                      />
+                    </div>
+                  </Box>
+                  {/* {customValidationMsgs.productUnchecked && <CustomValidationMessage message="Please select the gift product" />} */}
                 </BlockStack>
               </Card>
             </div>
@@ -410,7 +395,7 @@ export default function edit() {
           secondaryActions={[
             {
               content: "Delete Discount",
-              onAction: () => handleDeleteDiscount(promoDetail?.discountNode?.discount?.discountId),
+              onAction: () => handleDeleteDiscount(data?.discountNode?.discount?.discountId),
             },
           ]}
         />
