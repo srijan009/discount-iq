@@ -3,7 +3,7 @@
 client_id = "98659bd10a7ece390562269fdcabe4a9"
 name = "discount-iq"
 handle = "discount-iq-1"
-application_url = "https://makers-smooth-welsh-sperm.trycloudflare.com"
+application_url = "https://waiting-sku-hello-highest.trycloudflare.com"
 embedded = true
 
 [build]
@@ -17,9 +17,9 @@ scopes = "read_discounts,write_discounts,write_products"
 
 [auth]
 redirect_urls = [
-  "https://makers-smooth-welsh-sperm.trycloudflare.com/auth/callback",
-  "https://makers-smooth-welsh-sperm.trycloudflare.com/auth/shopify/callback",
-  "https://makers-smooth-welsh-sperm.trycloudflare.com/api/auth/callback"
+  "https://waiting-sku-hello-highest.trycloudflare.com/auth/callback",
+  "https://waiting-sku-hello-highest.trycloudflare.com/auth/shopify/callback",
+  "https://waiting-sku-hello-highest.trycloudflare.com/api/auth/callback"
 ]
 
 [webhooks]

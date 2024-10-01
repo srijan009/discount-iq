@@ -1,8 +1,9 @@
+import { useEffect } from "react";
 import type { ActionFunctionArgs, LoaderFunctionArgs } from "@remix-run/node";
 import { json, redirect } from "@remix-run/node";
 import { useLoaderData } from "@remix-run/react";
 import { authenticate } from "../shopify.server";
-import { Form, useSubmit, useActionData } from "@remix-run/react"
+import { Form, useSubmit, useActionData, useNavigate } from "@remix-run/react"
 import { useMemo, useState } from "react";
 /**
  * UI Components Imports 
@@ -21,6 +22,7 @@ import ThresholdList from "../components/ThresholdList"
 import GiftProductCard from "app/components/GiftProductCard";
 import CustomValidationMessage from "app/components/CustomValidationMessage";
 import SuccessBanner from "app/components/SuccessBanner";
+import { removeUnwantedKeys } from "app/data.util";
 export const action = async ({ params, request }: ActionFunctionArgs) => {
   const { functionId, id } = params;
   const { admin } = await authenticate.admin(request)
@@ -38,6 +40,8 @@ export const action = async ({ params, request }: ActionFunctionArgs) => {
     const functionPayload = {
       collectionIds: promoQualifyingCollectionIds
     }
+    const promoDetailPayload = removeUnwantedKeys(promoDetails, ['promoMetafieldId','promoInputMetafieldId'])
+  
     const baseDiscount = {
       functionId,
       title,
@@ -47,7 +51,7 @@ export const action = async ({ params, request }: ActionFunctionArgs) => {
       metafields: [
         {
           id: promoDetails.promoMetafieldId,
-          value: JSON.stringify(promoDetails)
+          value: JSON.stringify(promoDetailPayload)
         },
         {
           id: promoDetails.promoInputMetafieldId,
@@ -91,7 +95,7 @@ export const action = async ({ params, request }: ActionFunctionArgs) => {
     );
 
     const responseJson = await response.json();
-    return json({ status: 'success', promoDetail: responseJson.data, editedMessage: true })
+     return json({ status: 'success', promoDetail: responseJson.data , action: 'UPDATE' })
 
   }else if(formData.get('action') == 'DELETE'){
     const discountId = formData.get('discountId')
@@ -166,20 +170,21 @@ export default function edit() {
   const collectionMetafieldId = data?.discountNode?.promo_qualifying_collections.id
   const additionalDetails: any = JSON.parse(data?.discountNode?.promoDetails?.value || {})
 
-  const [giftProduct, setGiftProduct] = useState(JSON.parse(additionalDetails.giftProduct))
+
 
   const submitForm = useSubmit()
   const actionData = useActionData()
+  const navigate = useNavigate()
   const todaysDate = useMemo(() => new Date(), []);
   const thresholdFactory = ({ collectionImage, collectionId, collectionTitle, quantity }: any): any => ({
-    collectionImage, collectionId, collectionTitle, quantity: 0
+    collectionImage, collectionId, collectionTitle, quantity: 1
   })
   const { fields, addItem, removeItem } = useDynamicList({
     list: additionalDetails?.thresholds,
     validates: {
       quantity: (quantity) => {
         if (quantity <= 0) {
-          return "Threshold Must Be greater than 0"
+          return "Threshold must be greater than 0"
         }
       }
     }
@@ -253,19 +258,29 @@ export default function edit() {
         endsAt: form.endDate,
         promoDetails: form.promoDetails
       };
-
+      if(fields.length === 0){
+        return { status: 'fail', errors: []}
+      }
       //console.log("discount",discount)
-      //submitForm({ discount: JSON.stringify(discount), action: 'UPDATE' }, { method: "post" });
+      submitForm({ discount: JSON.stringify(discount), action: 'UPDATE' }, { method: "post" });
 
       return { status: "success" };
     },
   });
+  useEffect( () => {
+    if(actionData?.status == 'success' && actionData?.action == 'UPDATE'){
+      shopify.toast.show('Promo gift with purchased is edited successfully', {
+        duration: 5000,
+      });
+      navigate('/app')
+    }
+  },[actionData])
   const handleCollectionPicker = async () => {
     const selectedCollections = await shopify.resourcePicker({ type: 'collection' })
     if (selectedCollections) {
       const [selectedCollection] = selectedCollections
       const collectionImageUrl = (selectedCollection?.image?.originalSrc) ? selectedCollection?.image?.originalSrc : null
-      addItem({ collectionId: selectedCollection.id, collectionImage: collectionImageUrl, collectionTitle: selectedCollection.title, quantity: 0 })
+      addItem({ collectionId: selectedCollection.id, collectionImage: collectionImageUrl, collectionTitle: selectedCollection.title, quantity: 1 })
     }
     return
   }
@@ -298,8 +313,6 @@ export default function edit() {
   return (
     <Page title="Edit GWP Quantity Promo">
       <Layout.Section>
-        {/* {successMessage && !actionData?.editedMessage && <SuccessBanner message="Promo Created Successfully" />} */}
-        {actionData?.editedMessage && <SuccessBanner message="Promo Edited Successfully" />}
         <Form method="post">
           {/* {actionData?.errors ? JSON.stringify(actionData?.errors) : ''} */}
           <BlockStack align="space-around">
@@ -334,7 +347,7 @@ export default function edit() {
                   <div>
                     <Button size="medium" onClick={handleCollectionPicker}>+ Add the Collection</Button>
                   </div>
-                  {/* {customValidationMsgs.collectionUnchecked && <CustomValidationMessage message="Please choose the collection eligible for gift" />} */}
+                  {fields.length <= 0 && <CustomValidationMessage message="Please choose the collection eligible for gift" />}
                 </BlockStack>
                 {/* Collection List starts */}
                 <Bleed>
