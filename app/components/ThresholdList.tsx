@@ -12,7 +12,7 @@ import { FieldsProp } from 'app/types/type';
 
 
 const renderItems = (fields: FieldsProp[] , handleThresholdRemoval : any) => {
-  console.log("fields",fields)  
+  //console.log("fields",fields)  
   if (fields.length === 0) {
     return
   }
