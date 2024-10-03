@@ -3,7 +3,7 @@
 client_id = "98659bd10a7ece390562269fdcabe4a9"
 name = "discount-iq"
 handle = "discount-iq-1"
-application_url = "https://boys-borough-counties-puppy.trycloudflare.com"
+application_url = "https://harris-estimation-amd-trek.trycloudflare.com"
 embedded = true
 
 [build]
@@ -17,9 +17,9 @@ scopes = "read_discounts,write_discounts,write_products"
 
 [auth]
 redirect_urls = [
-  "https://boys-borough-counties-puppy.trycloudflare.com/auth/callback",
-  "https://boys-borough-counties-puppy.trycloudflare.com/auth/shopify/callback",
-  "https://boys-borough-counties-puppy.trycloudflare.com/api/auth/callback"
+  "https://harris-estimation-amd-trek.trycloudflare.com/auth/callback",
+  "https://harris-estimation-amd-trek.trycloudflare.com/auth/shopify/callback",
+  "https://harris-estimation-amd-trek.trycloudflare.com/api/auth/callback"
 ]
 
 [webhooks]
