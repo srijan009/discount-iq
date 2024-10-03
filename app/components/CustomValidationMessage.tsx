@@ -2,9 +2,8 @@ import { Icon, Text } from '@shopify/polaris';
 import {
     AlertCircleIcon,
 } from '@shopify/polaris-icons';
-type ValidationMessage = {
-    message: string
-}
+import { ValidationMessage } from 'app/types/type';
+
 export default function CustomValidationMessage({ message }: ValidationMessage) {
     return (
         <div className="custom-validation-msg">

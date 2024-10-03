@@ -1,13 +1,14 @@
-import { useMemo , useEffect } from "react";
+
 import type { ActionFunctionArgs, LoaderFunctionArgs } from "@remix-run/node";
-import { json, redirect } from "@remix-run/node";
-import { Form, useSubmit, useActionData , useNavigate } from "@remix-run/react"
+import { json } from "@remix-run/node";
+import { useMemo, useEffect } from "react"
+import { Form, useSubmit, useActionData, useNavigate } from "@remix-run/react"
 // import shopify from "../shopify.server";
 import { Page, Layout, PageActions, Bleed, Card, BlockStack, InlineGrid, InlineStack, Text, TextField, RadioButton, Button, Box } from "@shopify/polaris"
-
 import {
   ActiveDatesCard,
   DiscountClass,
+  DiscountMethod,
   MethodCard,
 } from "@shopify/discount-app-components";
 import { useForm, useField, asChoiceField, useDynamicList } from "@shopify/react-form";
@@ -16,17 +17,19 @@ import GiftProductCard from "app/components/GiftProductCard";
 import CustomValidationMessage from "app/components/CustomValidationMessage";
 //import shopify from "app/shopify.server";
 import { authenticate } from "../shopify.server";
+import { ActionData, SelectedCollection } from "app/types/type";
 export const action = async ({ params, request }: ActionFunctionArgs) => {
   const { functionId } = params;
   const { admin } = await authenticate.admin(request)
   const formData = await request.formData();
+  const result: string | any = formData.get("discount")
   const {
     title,
     combinesWith,
     startsAt,
     endsAt,
     promoDetails,
-  } = JSON.parse(formData.get("discount"));
+  } = JSON.parse(result);
   const baseDiscount = {
     functionId,
     title,
@@ -85,7 +88,7 @@ export const action = async ({ params, request }: ActionFunctionArgs) => {
   const discountGidArr = discountGid.split('/')
   const discountId = discountGidArr[discountGidArr.length - 1]
   const targetUrl = `/app/discounts/gwp-quantity/${functionId}/${discountId}/edit`
-  return { status: 'success' , data: targetUrl}
+  return { status: 'success', data: targetUrl }
 
 }
 export const loader = async ({ request }: LoaderFunctionArgs) => {
@@ -107,7 +110,7 @@ type Threshold = {
 
 export default function create() {
   const submitForm = useSubmit()
-  const actionData = useActionData()
+  const actionData: ActionData | undefined = useActionData()
   const navigate = useNavigate()
   const todaysDate = useMemo(() => new Date(), []);
   const thresholdFactory = ({ collectionImage, collectionId, collectionTitle, quantity }: Threshold): any => ({
@@ -156,9 +159,9 @@ export default function create() {
         condition: useField('OR'),
         giftProduct: useField({
           value: '',
-          validates:[
-            (value)=>{
-              if(value == ''){
+          validates: [
+            (value) => {
+              if (value == '') {
                 return 'Please choose the gift product'
               }
             }
@@ -186,30 +189,29 @@ export default function create() {
         endsAt: form.endDate,
         promoDetails: form.promoDetails
       };
-      if(fields.length === 0){
-        return { status: 'fail', errors: []}
+      if (fields.length === 0) {
+        return { status: 'fail', errors: [] }
       }
       submitForm({ discount: JSON.stringify(discount) }, { method: "post" });
       return { status: "success" };
     },
   });
-  useEffect( () => {
-    console.log("hsadgf",actionData)
-    if(actionData?.status == 'success' ) {
+  useEffect(() => {
+    if (actionData?.status == 'success') {
       shopify.toast.show('Promo gift with purchased is saved successfully', {
         duration: 5000,
       });
-      if(actionData?.data){
+      if (actionData?.data) {
         navigate(actionData?.data)
       }
     }
   }, [actionData])
   const handleCollectionPicker = async () => {
-    const selectedCollections = await shopify.resourcePicker({ type: 'collection' })
-    if (selectedCollections) {
-      const [selectedCollection] = selectedCollections
+    const response: any = await shopify.resourcePicker({ type: 'collection' })
+    const [selectedCollection]: SelectedCollection[] = response
+    if (selectedCollection) {
       const collectionImageUrl = (selectedCollection?.image?.originalSrc) ? selectedCollection?.image?.originalSrc : null
-      addItem({ collectionId: selectedCollection.id, collectionImage: collectionImageUrl, collectionTitle: selectedCollection.title, quantity: 0 })
+      addItem({ collectionId: selectedCollection.id, collectionImage: collectionImageUrl, collectionTitle: selectedCollection.title, quantity: 1 })
     }
     return
   }
@@ -247,7 +249,15 @@ export default function create() {
               title="GWP"
               discountTitle={discountTitle}
               discountClass={DiscountClass.Product}
-              discountMethod="AUTOMATIC"
+              // discountMethod={DiscountMethod.Automatic}
+              discountMethod={{
+                value: DiscountMethod.Automatic,
+                onChange: () => { }
+              }}
+              discountCode={{
+                value: "",
+                onChange: () => { }
+              }}
               discountMethodHidden={true}
             />
             <div className="condition-section">
@@ -301,10 +311,10 @@ export default function create() {
                     </InlineGrid>
                   </div>
                   <Box>
-                  {promoDetails.giftProduct.value != '' &&
-                    <Box>
-                      <GiftProductCard giftProduct={JSON.parse(promoDetails.giftProduct.value)} />
-                    </Box>
+                    {promoDetails.giftProduct.value != '' &&
+                      <Box>
+                        <GiftProductCard giftProduct={JSON.parse(promoDetails.giftProduct.value)} />
+                      </Box>
                     }
                     <div className="hidden">
                       <TextField
