@@ -5,8 +5,10 @@ import {
 import {
   ImageIcon
 } from '@shopify/polaris-icons';
+import { GiftProductCardProps } from 'app/types/type';
 
-export default function GiftProductCard({ giftProduct }){
+export default function GiftProductCard({ giftProduct }:GiftProductCardProps){
+  
    const { title, images } = giftProduct
   return(
    <div className='gift-wrapper'>

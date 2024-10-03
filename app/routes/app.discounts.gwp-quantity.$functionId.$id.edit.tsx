@@ -4,7 +4,7 @@ import { json, redirect } from "@remix-run/node";
 import { useLoaderData } from "@remix-run/react";
 import { authenticate } from "../shopify.server";
 import { Form, useSubmit, useActionData, useNavigate } from "@remix-run/react"
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 /**
  * UI Components Imports 
  */
@@ -14,6 +14,7 @@ import { Page, Layout, PageActions, Bleed, Card, BlockStack, InlineGrid, InlineS
 import {
   ActiveDatesCard,
   DiscountClass,
+  DiscountMethod,
   MethodCard,
   RequirementType,
 } from "@shopify/discount-app-components";
@@ -21,27 +22,27 @@ import { useForm, useField, asChoiceField, useDynamicList } from "@shopify/react
 import ThresholdList from "../components/ThresholdList"
 import GiftProductCard from "app/components/GiftProductCard";
 import CustomValidationMessage from "app/components/CustomValidationMessage";
-import SuccessBanner from "app/components/SuccessBanner";
 import { removeUnwantedKeys } from "app/data.util";
+import { ActionData, SelectedCollection } from "app/types/type";
 export const action = async ({ params, request }: ActionFunctionArgs) => {
   const { functionId, id } = params;
   const { admin } = await authenticate.admin(request)
   const formData = await request.formData();
   if (formData.get('action') == 'UPDATE') {
+    const result: string | any = formData.get("discount")
     const {
       title,
-      method,
       combinesWith,
       startsAt,
       endsAt,
       promoDetails,
-    } = JSON.parse(formData.get("discount"));
+    } = JSON.parse(result);
     const promoQualifyingCollectionIds = promoDetails.thresholds.map((item: any) => item.collectionId)
     const functionPayload = {
       collectionIds: promoQualifyingCollectionIds
     }
-    const promoDetailPayload = removeUnwantedKeys(promoDetails, ['promoMetafieldId','promoInputMetafieldId'])
-  
+    const promoDetailPayload = removeUnwantedKeys(promoDetails, ['promoMetafieldId', 'promoInputMetafieldId'])
+
     const baseDiscount = {
       functionId,
       title,
@@ -95,9 +96,10 @@ export const action = async ({ params, request }: ActionFunctionArgs) => {
     );
 
     const responseJson = await response.json();
-     return json({ status: 'success', promoDetail: responseJson.data , action: 'UPDATE' })
+    //console.log(responseJson?.data, 'responseJson?.data')
+    return json({ status: 'success', data: responseJson.data, action: 'UPDATE' })
 
-  }else if(formData.get('action') == 'DELETE'){
+  } else if (formData.get('action') == 'DELETE') {
     const discountId = formData.get('discountId')
     const response = await admin.graphql(
       `#graphql
@@ -157,11 +159,11 @@ export const loader = async ({ request, params }: LoaderFunctionArgs) => {
     
     `)
   const responseJson = await response.json();
-  if(!responseJson.data){
+  if (!responseJson.data) {
     return redirect("/app")
   }
 
-  return json({ status: 'success', data: responseJson.data});
+  return json({ status: 'success', data: responseJson.data, action: 'DELETE' });
 
 };
 export default function edit() {
@@ -173,7 +175,7 @@ export default function edit() {
 
 
   const submitForm = useSubmit()
-  const actionData = useActionData()
+  const actionData: ActionData | undefined = useActionData()
   const navigate = useNavigate()
   const todaysDate = useMemo(() => new Date(), []);
   const thresholdFactory = ({ collectionImage, collectionId, collectionTitle, quantity }: any): any => ({
@@ -228,9 +230,9 @@ export default function edit() {
         condition: useField(additionalDetails.condition),
         giftProduct: useField({
           value: additionalDetails.giftProduct,
-          validates:[
-            (value)=>{
-              if(value == ''){
+          validates: [
+            (value) => {
+              if (value == '') {
                 return 'Please choose the gift product'
               }
             }
@@ -258,8 +260,8 @@ export default function edit() {
         endsAt: form.endDate,
         promoDetails: form.promoDetails
       };
-      if(fields.length === 0){
-        return { status: 'fail', errors: []}
+      if (fields.length === 0) {
+        return { status: 'fail', errors: [] }
       }
       //console.log("discount",discount)
       submitForm({ discount: JSON.stringify(discount), action: 'UPDATE' }, { method: "post" });
@@ -267,18 +269,20 @@ export default function edit() {
       return { status: "success" };
     },
   });
-  useEffect( () => {
-    if(actionData?.status == 'success' && actionData?.action == 'UPDATE'){
+  useEffect(() => {
+    if (actionData?.status == 'success' && actionData?.action == 'UPDATE') {
       shopify.toast.show('Promo gift with purchased is edited successfully', {
         duration: 5000,
       });
       navigate('/app')
     }
-  },[actionData])
+  }, [actionData])
+
   const handleCollectionPicker = async () => {
-    const selectedCollections = await shopify.resourcePicker({ type: 'collection' })
-    if (selectedCollections) {
-      const [selectedCollection] = selectedCollections
+    // const selectedCollections:SelectedCollection[]  = await shopify.resourcePicker({ type: 'collection' })
+    const response: any = await shopify.resourcePicker({ type: 'collection' })
+    const [selectedCollection]: SelectedCollection[] = response
+    if (selectedCollection) {
       const collectionImageUrl = (selectedCollection?.image?.originalSrc) ? selectedCollection?.image?.originalSrc : null
       addItem({ collectionId: selectedCollection.id, collectionImage: collectionImageUrl, collectionTitle: selectedCollection.title, quantity: 1 })
     }
@@ -286,7 +290,8 @@ export default function edit() {
   }
   const handleProductSelector = async () => {
     const selectedProducts = await shopify.resourcePicker({
-      type: 'product', filter: {
+      type: 'product',
+      filter: {
         variants: false
       }
     })
@@ -306,7 +311,7 @@ export default function edit() {
     //console.log(removeThresholdIndex, fields)
   }
   const handleDeleteDiscount = (discountId: string) => {
-    console.log("Delete Discount", discountId)
+    //console.log("Delete Discount", discountId)
     const formData = new FormData()
     submitForm({ discountId, action: 'DELETE' }, { method: "post" });
   }
@@ -320,7 +325,14 @@ export default function edit() {
               title="GWP"
               discountTitle={discountTitle}
               discountClass={DiscountClass.Product}
-              discountMethod="AUTOMATIC"
+              discountMethod={{
+                value:DiscountMethod.Automatic,
+                onChange:()=>{}
+              }}
+              discountCode={{
+                value:"",
+                onChange:()=>{}
+              }}
               discountMethodHidden={true}
             />
             <div className="condition-section">
@@ -358,7 +370,7 @@ export default function edit() {
             </div>
             <div className="gift-section">
               <Card>
-                <BlockStack gap="3">
+                <BlockStack>
                   <Text variant="headingMd" as="h2">
                     Gift Section
                   </Text>
@@ -376,9 +388,9 @@ export default function edit() {
                   </div>
                   <Box>
                     {promoDetails.giftProduct.value != '' &&
-                    <Box>
-                      <GiftProductCard giftProduct={JSON.parse(promoDetails.giftProduct.value)} />
-                    </Box>
+                      <Box>
+                        <GiftProductCard giftProduct={JSON.parse(promoDetails.giftProduct.value)} />
+                      </Box>
                     }
                     <div className="hidden">
                       <TextField

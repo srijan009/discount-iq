@@ -1,15 +1,6 @@
-import react from "react"
 import {
-  Card,
-  ResourceList,
-  Avatar,
-  ResourceItem,
-  Text,
-  BlockStack,
   Box,
   InlineGrid,
-  Button,
-  InlineStack,
   TextField,
   Thumbnail
 } from '@shopify/polaris';
@@ -17,7 +8,11 @@ import {
   XIcon,
   ImageIcon
 } from '@shopify/polaris-icons';
-const renderItems = (fields: any , handleThresholdRemoval : any) => {
+import { FieldsProp } from 'app/types/type';
+
+
+const renderItems = (fields: FieldsProp[] , handleThresholdRemoval : any) => {
+  console.log("fields",fields)  
   if (fields.length === 0) {
     return
   }
@@ -28,7 +23,6 @@ const renderItems = (fields: any , handleThresholdRemoval : any) => {
         <div>
           <div className="threshold-left">
             <div className="threshold-collection-counter">
-              {/* {++index} */}
             </div>
             <div className="threshold-wrapper">
               <div className="threshold-image-holder">
