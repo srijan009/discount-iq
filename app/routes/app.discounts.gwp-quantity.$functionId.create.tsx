@@ -1,5 +1,5 @@
 
-import type { ActionFunctionArgs, LoaderFunctionArgs } from "@remix-run/node";
+import type { ActionFunctionArgs } from "@remix-run/node";
 import { json } from "@remix-run/node";
 import { useMemo, useEffect } from "react"
 import { Form, useSubmit, useActionData, useNavigate } from "@remix-run/react"
@@ -18,6 +18,7 @@ import CustomValidationMessage from "app/components/CustomValidationMessage";
 //import shopify from "app/shopify.server";
 import { authenticate } from "../shopify.server";
 import { ActionData, SelectedCollection } from "app/types/type";
+import ErrorMessage from "app/components/ErrorMessage";
 export const action = async ({ params, request }: ActionFunctionArgs) => {
   const { functionId } = params;
   const { admin } = await authenticate.admin(request)
@@ -91,11 +92,7 @@ export const action = async ({ params, request }: ActionFunctionArgs) => {
   return { status: 'success', data: targetUrl }
 
 }
-export const loader = async ({ request }: LoaderFunctionArgs) => {
-  //await authenticate.admin(request);
 
-  return null;
-};
 /**
  * Discount Form Variables
  * @returns 
@@ -236,13 +233,17 @@ export default function create() {
     }
     console.log(removeThresholdIndex, fields)
   }
-  const handleDeleteDiscount = () => {
-    console.log("Handle Discount Delete")
+  const handleBackBtn = () => {
+    console.log("Handle Back Btn")
+    open('shopify://admin/discounts', '_top');
   }
   return (
     <Page title="Create GWP Quantity Promo">
       <Layout.Section>
-        <Form method="post">
+        {actionData?.status == 'failed'  && <ErrorMessage errors={actionData?.data} /> }  
+      </Layout.Section>
+      <Layout.Section>
+        <Form method="post" onSubmit={submit}>
           {actionData?.errors ? JSON.stringify(actionData?.errors) : ''}
           <BlockStack align="space-around">
             <MethodCard
@@ -342,8 +343,8 @@ export default function create() {
           }}
           secondaryActions={[
             {
-              content: "Delete Discount",
-              onAction: () => handleDeleteDiscount,
+              content: "Back",
+              onAction: () => handleBackBtn(),
             },
           ]}
         />

@@ -3,7 +3,7 @@
 client_id = "98659bd10a7ece390562269fdcabe4a9"
 name = "discount-iq"
 handle = "discount-iq-1"
-application_url = "https://congressional-portable-frontpage-saudi.trycloudflare.com"
+application_url = "https://slope-neck-airlines-rrp.trycloudflare.com"
 embedded = true
 
 [build]
@@ -17,9 +17,9 @@ scopes = "read_discounts,write_discounts,write_products"
 
 [auth]
 redirect_urls = [
-  "https://congressional-portable-frontpage-saudi.trycloudflare.com/auth/callback",
-  "https://congressional-portable-frontpage-saudi.trycloudflare.com/auth/shopify/callback",
-  "https://congressional-portable-frontpage-saudi.trycloudflare.com/api/auth/callback"
+  "https://slope-neck-airlines-rrp.trycloudflare.com/auth/callback",
+  "https://slope-neck-airlines-rrp.trycloudflare.com/auth/shopify/callback",
+  "https://slope-neck-airlines-rrp.trycloudflare.com/api/auth/callback"
 ]
 
 [webhooks]
