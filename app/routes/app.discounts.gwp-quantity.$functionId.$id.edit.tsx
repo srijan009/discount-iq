@@ -3,8 +3,7 @@ import type { ActionFunctionArgs, LoaderFunctionArgs } from "@remix-run/node";
 import { json, redirect } from "@remix-run/node";
 import { useLoaderData } from "@remix-run/react";
 import { authenticate } from "../shopify.server";
-import { Form, useSubmit, useActionData, useNavigate } from "@remix-run/react"
-import { useMemo } from "react";
+import { Form, useSubmit, useActionData } from "@remix-run/react"
 /**
  * UI Components Imports 
  */
@@ -24,6 +23,8 @@ import GiftProductCard from "app/components/GiftProductCard";
 import CustomValidationMessage from "app/components/CustomValidationMessage";
 import { removeUnwantedKeys } from "app/data.util";
 import { ActionData, SelectedCollection } from "app/types/type";
+import Dialog  from "app/components/Dialog";
+import AppSaveBar from "app/components/AppSaveBar";
 export const action = async ({ params, request }: ActionFunctionArgs) => {
   const { functionId, id } = params;
   const { admin } = await authenticate.admin(request)
@@ -119,7 +120,8 @@ export const action = async ({ params, request }: ActionFunctionArgs) => {
         },
       },
     );
-    return redirect('/app')
+    const responseJson = await response.json();    
+    return json({ status: 'success', data: responseJson.data, action: 'DELETE' })
   }
 }
 export const loader = async ({ request, params }: LoaderFunctionArgs) => {
@@ -159,7 +161,7 @@ export const loader = async ({ request, params }: LoaderFunctionArgs) => {
     
     `)
   const responseJson = await response.json();
-  if (!responseJson.data) {
+  if (!responseJson?.data?.discountNode) {
     return redirect("/app")
   }
 
@@ -176,8 +178,6 @@ export default function edit() {
 
   const submitForm = useSubmit()
   const actionData: ActionData | undefined = useActionData()
-  const navigate = useNavigate()
-  const todaysDate = useMemo(() => new Date(), []);
   const thresholdFactory = ({ collectionImage, collectionId, collectionTitle, quantity }: any): any => ({
     collectionImage, collectionId, collectionTitle, quantity: 1
   })
@@ -271,10 +271,15 @@ export default function edit() {
   });
   useEffect(() => {
     if (actionData?.status == 'success' && actionData?.action == 'UPDATE') {
-      shopify.toast.show('Promo gift with purchased is edited successfully', {
+      shopify.toast.show('Promo is edited successfully', {
         duration: 5000,
       });
-      navigate('/app')
+      open('shopify://admin/discounts', '_top');
+    }else if(actionData?.status == 'success' && actionData?.action == 'DELETE'){
+      shopify.toast.show('Promo is deleted successfully', {
+        duration: 5000,
+      });
+      open('shopify://admin/discounts', '_top');
     }
   }, [actionData])
 
@@ -310,15 +315,20 @@ export default function edit() {
     }
     //console.log(removeThresholdIndex, fields)
   }
+  const handleShowModal = () => {
+    shopify.modal.show('show-modal')
+  }
   const handleDeleteDiscount = (discountId: string) => {
-    //console.log("Delete Discount", discountId)
-    const formData = new FormData()
     submitForm({ discountId, action: 'DELETE' }, { method: "post" });
   }
+
   return (
     <Page title="Edit GWP Quantity Promo">
       <Layout.Section>
-        <Form method="post">
+        <AppSaveBar />
+      </Layout.Section>
+      <Layout.Section>
+        <Form method="post" data-save-bar onSubmit={submit}>
           {/* {actionData?.errors ? JSON.stringify(actionData?.errors) : ''} */}
           <BlockStack align="space-around">
             <MethodCard
@@ -326,12 +336,12 @@ export default function edit() {
               discountTitle={discountTitle}
               discountClass={DiscountClass.Product}
               discountMethod={{
-                value:DiscountMethod.Automatic,
-                onChange:()=>{}
+                value: DiscountMethod.Automatic,
+                onChange: () => { }
               }}
               discountCode={{
-                value:"",
-                onChange:()=>{}
+                value: "",
+                onChange: () => { }
               }}
               discountMethodHidden={true}
             />
@@ -413,17 +423,21 @@ export default function edit() {
       <Layout.Section>
         <PageActions
           primaryAction={{
-            content: "Edit Discount",
+            content: "Save",
             onAction: submit,
             // loading: isLoading,
           }}
           secondaryActions={[
             {
-              content: "Delete Discount",
-              onAction: () => handleDeleteDiscount(data?.discountNode?.discount?.discountId),
+              content: "Delete",
+              destructive: true,
+              onAction: () => handleShowModal(),
             },
           ]}
         />
+      </Layout.Section>
+      <Layout.Section>
+        <Dialog discountTitle={discountTitle.value} discountId={data?.discountNode?.discount?.discountId} handleDeleteDiscount={handleDeleteDiscount} />
       </Layout.Section>
     </Page>
   )
