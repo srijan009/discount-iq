@@ -8,7 +8,7 @@ const renderListItems = ( errors: any[]) => {
   }
 }
 export default function ErrorMessage( { errors} : any) {
-  const title: string = `here are ${errors.length} errors with this discount`
+  let title: string = errors.length > 1 ? `There are ${errors.length} errors with this discount`:`There is ${errors.length} error with this discount`
   return (
     <>
       <Banner tone="critical" title={title}>

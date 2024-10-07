@@ -3,7 +3,7 @@
 client_id = "98659bd10a7ece390562269fdcabe4a9"
 name = "discount-iq"
 handle = "discount-iq-1"
-application_url = "https://slope-neck-airlines-rrp.trycloudflare.com"
+application_url = "https://governments-hearing-barrier-banana.trycloudflare.com"
 embedded = true
 
 [build]
@@ -17,9 +17,9 @@ scopes = "read_discounts,write_discounts,write_products"
 
 [auth]
 redirect_urls = [
-  "https://slope-neck-airlines-rrp.trycloudflare.com/auth/callback",
-  "https://slope-neck-airlines-rrp.trycloudflare.com/auth/shopify/callback",
-  "https://slope-neck-airlines-rrp.trycloudflare.com/api/auth/callback"
+  "https://governments-hearing-barrier-banana.trycloudflare.com/auth/callback",
+  "https://governments-hearing-barrier-banana.trycloudflare.com/auth/shopify/callback",
+  "https://governments-hearing-barrier-banana.trycloudflare.com/api/auth/callback"
 ]
 
 [webhooks]

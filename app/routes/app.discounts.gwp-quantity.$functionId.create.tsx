@@ -9,7 +9,9 @@ import {
   ActiveDatesCard,
   DiscountClass,
   DiscountMethod,
+  DiscountStatus,
   MethodCard,
+  SummaryCard,
 } from "@shopify/discount-app-components";
 import { useForm, useField, asChoiceField, useDynamicList } from "@shopify/react-form";
 import ThresholdList from "../components/ThresholdList"
@@ -19,6 +21,7 @@ import CustomValidationMessage from "app/components/CustomValidationMessage";
 import { authenticate } from "../shopify.server";
 import { ActionData, SelectedCollection } from "app/types/type";
 import ErrorMessage from "app/components/ErrorMessage";
+import { removeUnwantedKeys } from "app/data.util";
 export const action = async ({ params, request }: ActionFunctionArgs) => {
   const { functionId } = params;
   const { admin } = await authenticate.admin(request)
@@ -42,7 +45,7 @@ export const action = async ({ params, request }: ActionFunctionArgs) => {
   const functionPayload = {
     collectionIds: promoQualifyingCollectionIds
   }
-  console.log("functionPayload", functionPayload)
+  const promoDetailPayload = removeUnwantedKeys(promoDetails, ['collectionAdded'])
   const response = await admin.graphql(
     `#graphql
         mutation CreateAutomaticDiscount($discount: DiscountAutomaticAppInput!) {
@@ -66,7 +69,7 @@ export const action = async ({ params, request }: ActionFunctionArgs) => {
               namespace: "$app:gwp-promotions",
               key: "promoDetails",
               type: "json",
-              value: JSON.stringify(promoDetails),
+              value: JSON.stringify(promoDetailPayload),
             },
             {
               namespace: "$app:gwp-promotions",
@@ -174,7 +177,17 @@ export default function create() {
             }
           ]
         }),
-        thresholds: fields
+        thresholds: fields,
+        collectionAdded: useField({
+          value: false,
+          validates: [
+            (value) => {
+              if (!value) {
+                return 'Please choose the collection'
+              }
+            }
+          ]
+        })
       },
     }
     ,
@@ -198,6 +211,7 @@ export default function create() {
       shopify.toast.show('Promo gift with purchased is saved successfully', {
         duration: 5000,
       });
+      //console.log("actionData?.data", actionData?.data)
       if (actionData?.data) {
         navigate(actionData?.data)
       }
@@ -209,6 +223,7 @@ export default function create() {
     if (selectedCollection) {
       const collectionImageUrl = (selectedCollection?.image?.originalSrc) ? selectedCollection?.image?.originalSrc : null
       addItem({ collectionId: selectedCollection.id, collectionImage: collectionImageUrl, collectionTitle: selectedCollection.title, quantity: 1 })
+      promoDetails.collectionAdded.onChange(true)
     }
     return
   }
@@ -231,124 +246,155 @@ export default function create() {
     if (removeThresholdIndex) {
       removeItem(removeThresholdIndex)
     }
-    console.log(removeThresholdIndex, fields)
+    //console.log(removeThresholdIndex, fields)
   }
   const handleBackBtn = () => {
-    console.log("Handle Back Btn")
+    //console.log("Handle Back Btn")
     open('shopify://admin/discounts', '_top');
   }
   return (
-    <Page title="Create GWP Quantity Promo">
-      <Layout.Section>
-        {actionData?.status == 'failed'  && <ErrorMessage errors={actionData?.data} /> }  
-      </Layout.Section>
-      <Layout.Section>
-        <Form method="post" onSubmit={submit}>
-          {actionData?.errors ? JSON.stringify(actionData?.errors) : ''}
-          <BlockStack align="space-around">
-            <MethodCard
-              title="GWP"
-              discountTitle={discountTitle}
-              discountClass={DiscountClass.Product}
-              // discountMethod={DiscountMethod.Automatic}
-              discountMethod={{
-                value: DiscountMethod.Automatic,
-                onChange: () => { }
-              }}
-              discountCode={{
-                value: "",
-                onChange: () => { }
-              }}
-              discountMethodHidden={true}
-            />
-            <div className="condition-section">
-              <Card>
-                <BlockStack align="center">
-                  <div className="conditions-wrapper">
-                    <InlineGrid>
-                      <Text as="h2" fontWeight="semibold">
-                        Conditions
-                      </Text>
-                    </InlineGrid>
-                    <div className="condition-wrapper">
-                      <InlineStack blockAlign="center">
-                        <Text as="p">Condition must match</Text>
-                        <InlineStack>
-                          <RadioButton label="any condition" name="condition" {...asChoiceField(promoDetails.condition, 'OR')} />
-                          <RadioButton label="all condition" name="condition" {...asChoiceField(promoDetails.condition, 'AND')} />
-                        </InlineStack>
-                      </InlineStack >
-                    </div>
-                  </div>
-                </BlockStack>
-                <BlockStack>
-                  <div>
-                    <Button size="medium" onClick={handleCollectionPicker}>+ Add the Collection</Button>
-                  </div>
-                  {fields.length <= 0 && <CustomValidationMessage message="Please choose the collection eligible for gift" />}
-                </BlockStack>
-                {/* Collection List starts */}
-                <Bleed>
-                  {(fields.length > 0 ? <ThresholdList fields={fields} handleThresholdRemoval={handleThresholdRemoval} /> : '')}
-                </Bleed>
-                {/* Collection List  ends*/}
-              </Card>
-            </div>
-            <div className="gift-section">
-              <Card>
-                <BlockStack>
-                  <Text variant="headingMd" as="h2">
-                    Gift Section
-                  </Text>
-                  <div>
-                    <InlineGrid>
-                      <TextField
-                        {...promoDetails.maxQuantity}
-                      />
-                      <div className="product-selector-cta">
-                        <Button onClick={handleProductSelector}>Browse Product</Button>
+    <Page title="Create GWP Quantity Promo" backAction={{ content: 'Discounts', onAction: () => handleBackBtn() }}>
+      <Layout>
+        <Layout.Section>
+          <Layout.Section>
+            {actionData?.status == 'failed' && <ErrorMessage errors={actionData?.data} />}
+          </Layout.Section>
+          <Layout.Section>
+            <Form method="post" onSubmit={submit}>
+              {actionData?.errors ? JSON.stringify(actionData?.errors) : ''}
+              <BlockStack align="space-around">
+                <MethodCard
+                  title="GWP"
+                  discountTitle={discountTitle}
+                  discountClass={DiscountClass.Product}
+                  // discountMethod={DiscountMethod.Automatic}
+                  discountMethod={{
+                    value: DiscountMethod.Automatic,
+                    onChange: () => { }
+                  }}
+                  discountCode={{
+                    value: "",
+                    onChange: () => { }
+                  }}
+                  discountMethodHidden={true}
+                />
+                <div className="condition-section">
+                  <Card>
+                    <BlockStack align="center">
+                      <div className="conditions-wrapper">
+                        <InlineGrid>
+                          <Text as="h2" fontWeight="semibold">
+                            Conditions
+                          </Text>
+                        </InlineGrid>
+                        <div className="condition-wrapper">
+                          <InlineStack blockAlign="center">
+                            <Text as="p">Condition must match</Text>
+                            <InlineStack>
+                              <RadioButton label="any condition" name="condition" {...asChoiceField(promoDetails.condition, 'OR')} />
+                              <RadioButton label="all condition" name="condition" {...asChoiceField(promoDetails.condition, 'AND')} />
+                            </InlineStack>
+                          </InlineStack >
+                        </div>
                       </div>
-                      {promoDetails.giftProduct.value == '' ? <CustomValidationMessage message="Please choose the gift product" /> : ''}
-                    </InlineGrid>
-                  </div>
-                  <Box>
-                    {promoDetails.giftProduct.value != '' &&
+                    </BlockStack>
+                    <BlockStack>
+                      <div>
+                        <Button size="medium" onClick={handleCollectionPicker}>+ Add the Collection</Button>
+                      </div>
+                      {promoDetails.collectionAdded.allErrors.length > 0 && <CustomValidationMessage message="Please choose the collection eligible for gift" />}
+                    </BlockStack>
+                    {/* Collection List starts */}
+                    <Bleed>
+                      {(fields.length > 0 ? <ThresholdList fields={fields} handleThresholdRemoval={handleThresholdRemoval} /> : '')}
+                    </Bleed>
+                    {/* Collection List  ends*/}
+                  </Card>
+                </div>
+                <div className="gift-section">
+                  <Card>
+                    <BlockStack>
+                      <Text variant="headingMd" as="h2">
+                        Gift Section
+                      </Text>
+                      <div>
+                        <InlineGrid>
+                          <TextField
+                            {...promoDetails.maxQuantity}
+                          />
+                          <div className="product-selector-cta">
+                            <Button onClick={handleProductSelector}>Browse Product</Button>
+                          </div>
+                          {promoDetails.giftProduct.allErrors.length > 0 ? <CustomValidationMessage message="Please choose the gift product" /> : ''}
+                        </InlineGrid>
+                      </div>
                       <Box>
-                        <GiftProductCard giftProduct={JSON.parse(promoDetails.giftProduct.value)} />
+                        {promoDetails.giftProduct.value != '' &&
+                          <Box>
+                            <GiftProductCard giftProduct={JSON.parse(promoDetails.giftProduct.value)} />
+                          </Box>
+                        }
+                        <div className="hidden">
+                          <TextField
+                            {...promoDetails.giftProduct}
+                          />
+                        </div>
                       </Box>
-                    }
-                    <div className="hidden">
-                      <TextField
-                        {...promoDetails.giftProduct}
-                      />
-                    </div>
-                  </Box>
-                </BlockStack>
-              </Card>
-            </div>
-            <ActiveDatesCard
-              startDate={startDate}
-              endDate={endDate}
-              timezoneAbbreviation="EST"
+                    </BlockStack>
+                  </Card>
+                </div>
+                <ActiveDatesCard
+                  startDate={startDate}
+                  endDate={endDate}
+                  timezoneAbbreviation="EST"
+                />
+              </BlockStack>
+            </Form>
+          </Layout.Section>
+          <Layout.Section>
+            <PageActions
+              primaryAction={{
+                content: "Save discount",
+                onAction: submit,
+                // loading: isLoading,
+              }}
+              secondaryActions={[
+                {
+                  content: "Back",
+                  onAction: () => handleBackBtn(),
+                },
+              ]}
             />
-          </BlockStack>
-        </Form>
-      </Layout.Section>
-      <Layout.Section>
-        <PageActions
-          primaryAction={{
-            content: "Save discount",
-            onAction: submit,
-            // loading: isLoading,
-          }}
-          secondaryActions={[
-            {
-              content: "Back",
-              onAction: () => handleBackBtn(),
-            },
-          ]}
-        />
-      </Layout.Section>
+          </Layout.Section>
+        </Layout.Section>
+        <Layout.Section variant="oneThird">
+          <Layout.Section>
+            <SummaryCard
+              header={{
+                discountMethod: DiscountMethod.Automatic,
+                discountDescriptor: discountTitle.value,
+                appDiscountType: "GWP",
+                isEditing: false,
+              }}
+              performance={{
+                status: DiscountStatus.Active,
+                usageCount: 0,
+              }}
+              combinations={{
+                combinesWith: {
+                  orderDiscounts: true,
+                  productDiscounts: false,
+                  shippingDiscounts: false,
+                },
+              }}
+              activeDates={{
+                startDate: startDate.value,
+                endDate: endDate.value,
+              }}
+            />
+          </Layout.Section>
+        </Layout.Section>
+      </Layout>
     </Page>
   )
 }
