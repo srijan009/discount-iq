@@ -381,8 +381,8 @@ export default function edit() {
                       </div>
                     </BlockStack>
                     <BlockStack>
-                      <div>
-                        <Button size="medium" onClick={handleCollectionPicker}>+ Add the Collection</Button>
+                      <div>                  
+                      <Button size="medium" onClick={handleCollectionPicker}>+ Add the Collection</Button>
                       </div>
                       {promoDetails.collectionAdded.allErrors.length > 0 && <CustomValidationMessage message="Please choose the collection eligible for gift" />}
                     </BlockStack>
