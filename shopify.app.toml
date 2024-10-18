@@ -3,7 +3,7 @@
 client_id = "98659bd10a7ece390562269fdcabe4a9"
 name = "discount-iq"
 handle = "discount-iq-1"
-application_url = "https://governments-hearing-barrier-banana.trycloudflare.com"
+application_url = "https://knights-journals-records-sandra.trycloudflare.com"
 embedded = true
 
 [build]
@@ -13,13 +13,13 @@ include_config_on_deploy = true
 
 [access_scopes]
 # Learn more at https://shopify.dev/docs/apps/tools/cli/configuration#access_scopes
-scopes = "read_discounts,write_discounts,write_products"
+scopes = "read_discounts,read_themes,write_discounts,write_products"
 
 [auth]
 redirect_urls = [
-  "https://governments-hearing-barrier-banana.trycloudflare.com/auth/callback",
-  "https://governments-hearing-barrier-banana.trycloudflare.com/auth/shopify/callback",
-  "https://governments-hearing-barrier-banana.trycloudflare.com/api/auth/callback"
+  "https://knights-journals-records-sandra.trycloudflare.com/auth/callback",
+  "https://knights-journals-records-sandra.trycloudflare.com/auth/shopify/callback",
+  "https://knights-journals-records-sandra.trycloudflare.com/api/auth/callback"
 ]
 
 [webhooks]
