@@ -148,9 +148,9 @@ export default function create() {
         ]
       }),
       combinesWith: useField({
-        orderDiscounts: false,
-        productDiscounts: false,
-        shippingDiscounts: false,
+        orderDiscounts: true,
+        productDiscounts: true,
+        shippingDiscounts: true,
       }),
       startDate: useField(todaysDate),
       endDate: useField(null),
