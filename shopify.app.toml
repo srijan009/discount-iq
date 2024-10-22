@@ -3,7 +3,7 @@
 client_id = "98659bd10a7ece390562269fdcabe4a9"
 name = "discount-iq"
 handle = "discount-iq-1"
-application_url = "https://thanksgiving-antique-ripe-pets.trycloudflare.com"
+application_url = "https://cook-nerve-bikini-similarly.trycloudflare.com"
 embedded = true
 
 [build]
@@ -17,9 +17,9 @@ scopes = "read_discounts,read_themes,write_discounts,write_products"
 
 [auth]
 redirect_urls = [
-  "https://thanksgiving-antique-ripe-pets.trycloudflare.com/auth/callback",
-  "https://thanksgiving-antique-ripe-pets.trycloudflare.com/auth/shopify/callback",
-  "https://thanksgiving-antique-ripe-pets.trycloudflare.com/api/auth/callback"
+  "https://cook-nerve-bikini-similarly.trycloudflare.com/auth/callback",
+  "https://cook-nerve-bikini-similarly.trycloudflare.com/auth/shopify/callback",
+  "https://cook-nerve-bikini-similarly.trycloudflare.com/api/auth/callback"
 ]
 
 [webhooks]

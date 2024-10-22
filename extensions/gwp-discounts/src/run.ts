@@ -9,7 +9,7 @@ import {
 import { PromoDetail, Product } from "./types/global"
 
 const EMPTY_DISCOUNT: FunctionRunResult = {
-  discountApplicationStrategy: DiscountApplicationStrategy.First,
+  discountApplicationStrategy: DiscountApplicationStrategy.All,
   discounts: [],
 };
 
@@ -76,8 +76,9 @@ export function run(input: RunInput): FunctionRunResult {
         }
       }
     ],
-    discountApplicationStrategy: DiscountApplicationStrategy.First
+    discountApplicationStrategy: DiscountApplicationStrategy.All
   }
+  console.log("APPLY_DISCOUNT",APPLY_DISCOUNT)
   if(targets.length === 0){
     return EMPTY_DISCOUNT;
   }

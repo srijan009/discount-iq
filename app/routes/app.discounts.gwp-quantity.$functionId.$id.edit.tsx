@@ -214,9 +214,9 @@ export default function edit() {
         ]
       }),
       combinesWith: useField({
-        orderDiscounts: false,
-        productDiscounts: false,
-        shippingDiscounts: false,
+        orderDiscounts: true,
+        productDiscounts: true,
+        shippingDiscounts: true,
       }),
       requirementType: useField(RequirementType.None),
       requirementSubtotal: useField("0"),
@@ -251,7 +251,7 @@ export default function edit() {
         }),
         thresholds: fields,
         collectionAdded: useField({
-          value: false,
+          value: fields.length > 0 ? true :  false,
           validates: [
             (value) => {
               if (!value) {
